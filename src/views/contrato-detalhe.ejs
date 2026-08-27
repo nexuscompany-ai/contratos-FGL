@@ -1,0 +1,49 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container">
+  <h1><%= contract.client ? contract.client.nomeCompleto : "Contrato #" + contract.id.slice(0,8).toUpperCase() %></h1>
+
+  <div class="card">
+    <span class="badge <%= contract.status %>"><%= contract.status %></span>
+    <% if (prestesAVencer) { %> <span class="badge PRESTES">PRESTES A VENCER</span> <% } %>
+
+    <table style="margin-top:16px;">
+      <tr><th>Tipo de contrato</th><td><%= contract.tipoContrato %></td></tr>
+      <tr><th>Valor FIPE</th><td><%= contract.valorFipe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) %></td></tr>
+      <% if (contract.vehicle) { %>
+        <tr><th>Veículo</th><td><%= contract.vehicle.placa %> — <%= contract.vehicle.marca || "" %> <%= contract.vehicle.modelo || "" %> <%= contract.vehicle.ano || "" %></td></tr>
+      <% } %>
+      <% if (contract.client) { %>
+        <tr><th>CPF</th><td><%= contract.client.cpf || "—" %></td></tr>
+        <tr><th>Telefone</th><td><%= contract.client.telefone || "—" %></td></tr>
+        <tr><th>E-mail</th><td><%= contract.client.email || "—" %></td></tr>
+        <tr><th>Endereço</th><td><%= contract.client.endereco || "—" %></td></tr>
+      <% } %>
+      <% if (contract.acceptance) { %>
+        <tr><th>Aceito em</th><td><%= new Date(contract.acceptance.acceptedAt).toLocaleString("pt-BR") %> (IP: <%= contract.acceptance.ip || "—" %>)</td></tr>
+      <% } %>
+      <% if (contract.startDate) { %>
+        <tr><th>Início</th><td><%= new Date(contract.startDate).toLocaleDateString("pt-BR") %></td></tr>
+        <tr><th>Vencimento</th><td><%= new Date(contract.endDate).toLocaleDateString("pt-BR") %></td></tr>
+      <% } %>
+      <% if (contract.approvedBy) { %>
+        <tr><th>Aprovado por</th><td><%= contract.approvedBy.name %> em <%= new Date(contract.approvedAt).toLocaleString("pt-BR") %></td></tr>
+      <% } %>
+    </table>
+
+    <div class="actions">
+      <% if (contract.pdfPath) { %>
+        <a class="btn secondary" href="/contratos/<%= contract.id %>/pdf" target="_blank">Visualizar / baixar PDF</a>
+      <% } %>
+      <% if (contract.status === "PENDENTE") { %>
+        <form method="post" action="/contratos/<%= contract.id %>/aprovar" onsubmit="return confirm('Aprovar este contrato? Isso vai gerar o PDF final e ativar a vigência de 1 ano.');">
+          <button class="btn success" type="submit">APROVAR CONTRATO</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+
+  <a href="/">← Voltar ao dashboard</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<%- include("partials/head", { title }) %>
+<div class="container narrow">
+  <div class="card" style="margin-top:40px; text-align:center;">
+    <span class="badge <%= contract.status %>"><%= contract.status %></span>
+    <h1>
+      <% if (contract.status === "PENDENTE") { %>
+        Contrato enviado para aprovação
+      <% } else if (contract.status === "ATIVO") { %>
+        Contrato ativo
+      <% } else if (contract.status === "VENCIDO") { %>
+        Contrato vencido
+      <% } %>
+    </h1>
+    <p class="muted">
+      <% if (contract.status === "PENDENTE") { %>
+        Recebemos seus dados e o aceite. A FGL vai analisar e aprovar seu contrato em breve.
+      <% } else if (contract.status === "ATIVO") { %>
+        Vigência de <%= new Date(contract.startDate).toLocaleDateString("pt-BR") %> até <%= new Date(contract.endDate).toLocaleDateString("pt-BR") %>.
+      <% } %>
+    </p>
+    <% if (contract.pdfPath) { %>
+      <a class="btn" href="/contrato/<%= contract.token %>/pdf" target="_blank">Ver contrato em PDF</a>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<%- include("partials/head", { title }) %>
+<div class="container narrow">
+  <div class="card" style="margin-top:80px;">
+    <h1>FGL CONTRATOS</h1>
+    <p class="muted">Entrar no painel</p>
+    <% if (error) { %>
+      <div class="flash"><%= error %></div>
+    <% } %>
+    <form method="post" action="/login">
+      <label>E-mail</label>
+      <input type="email" name="email" required autofocus />
+      <label>Senha</label>
+      <input type="password" name="password" required />
+      <div class="actions">
+        <button class="btn block" type="submit">Entrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

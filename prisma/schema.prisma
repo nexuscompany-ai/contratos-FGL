@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  FUNCIONARIO
+}
+
+enum ContractStatus {
+  GERADO   // criado pela FGL, aguardando cliente preencher/aceitar
+  PENDENTE // cliente preencheu e aceitou, aguardando aprovação da FGL
+  ATIVO    // aprovado pela FGL, dentro da vigência
+  VENCIDO  // vigência encerrada
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(FUNCIONARIO)
+  createdAt DateTime @default(now())
+
+  contratosCriados   Contract[] @relation("CriadoPor")
+  contratosAprovados Contract[] @relation("AprovadoPor")
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  nomeCompleto  String
+  cpf           String
+  dataNascimento String?
+  endereco      String?
+  telefone      String?
+  email         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contracts Contract[]
+
+  @@index([cpf])
+}
+
+model Vehicle {
+  id        String   @id @default(cuid())
+  placa     String
+  renavam   String?
+  chassi    String?
+  modelo    String?
+  marca     String?
+  ano       String?
+  valorFipe Float?
+  createdAt DateTime @default(now())
+
+  contracts Contract[]
+
+  @@index([placa])
+}
+
+model Contract {
+  id           String         @id @default(cuid())
+  token        String         @unique
+  tipoContrato String
+  valorFipe    Float
+  status       ContractStatus @default(GERADO)
+
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id])
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  pdfPath   String?
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt   DateTime  @default(now())
+  filledAt    DateTime?
+  approvedAt  DateTime?
+
+  createdById  String?
+  createdBy    User?   @relation("CriadoPor", fields: [createdById], references: [id])
+  approvedById String?
+  approvedBy   User?   @relation("AprovadoPor", fields: [approvedById], references: [id])
+
+  acceptance Acceptance?
+
+  @@index([status])
+}
+
+model Acceptance {
+  id         String   @id @default(cuid())
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id])
+  acceptedAt DateTime @default(now())
+  ip         String?
+  userAgent  String?
+  version    String   @default("1")
+}

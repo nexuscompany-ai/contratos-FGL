@@ -1,0 +1,43 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container">
+  <h1><%= heading %></h1>
+  <div class="card">
+    <% if (contratos.length === 0) { %>
+      <p class="muted">Nenhum contrato aqui.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Veículo</th>
+            <th>Início</th>
+            <th>Vencimento</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% contratos.forEach(function(c) { %>
+            <tr>
+              <td><%= c.client ? c.client.nomeCompleto : "—" %></td>
+              <td><%= c.vehicle ? c.vehicle.placa : "—" %></td>
+              <td><%= c.startDate ? new Date(c.startDate).toLocaleDateString("pt-BR") : "—" %></td>
+              <td>
+                <%= c.endDate ? new Date(c.endDate).toLocaleDateString("pt-BR") : "—" %>
+                <% if (c.status === "ATIVO" && c.endDate && diasParaVencer(new Date(c.endDate)) <= 30) { %>
+                  <span class="muted">(<%= diasParaVencer(new Date(c.endDate)) %>d)</span>
+                <% } %>
+              </td>
+              <td><span class="badge <%= c.status %>"><%= c.status %></span></td>
+              <td><a href="/contratos/<%= c.id %>">Ver</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+  <a href="/">← Voltar ao dashboard</a>
+</div>
+</body>
+</html>

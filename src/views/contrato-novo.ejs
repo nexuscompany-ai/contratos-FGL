@@ -1,0 +1,26 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container narrow">
+  <h1>Enviar contrato</h1>
+  <div class="card">
+    <% if (typeof error !== "undefined" && error) { %>
+      <div class="flash"><%= error %></div>
+    <% } %>
+    <form method="post" action="/contratos/novo">
+      <label>Valor da Tabela FIPE</label>
+      <input type="text" name="valorFipe" placeholder="R$ 00.000,00" required />
+
+      <label>Tipo de contrato</label>
+      <select name="tipoContrato" required>
+        <option value="Plano de Rastreamento">Plano de Rastreamento</option>
+        <option value="Plano de Rastreamento + Assistência 24h">Plano de Rastreamento + Assistência 24h</option>
+      </select>
+
+      <div class="actions">
+        <button class="btn block" type="submit">GERAR CONTRATO</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

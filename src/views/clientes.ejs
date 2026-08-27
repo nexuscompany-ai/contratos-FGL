@@ -1,0 +1,33 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container">
+  <h1>Clientes</h1>
+  <div class="card">
+    <form method="get" action="/clientes">
+      <input type="text" name="q" placeholder="Digite nome, CPF ou placa..." value="<%= q %>" />
+    </form>
+  </div>
+
+  <div class="card">
+    <% if (clientes.length === 0) { %>
+      <p class="muted">Nenhum cliente encontrado.</p>
+    <% } else { %>
+      <table>
+        <thead><tr><th>Nome</th><th>CPF</th><th>Contratos</th><th></th></tr></thead>
+        <tbody>
+          <% clientes.forEach(function(c) { %>
+            <tr>
+              <td><%= c.nomeCompleto %></td>
+              <td><%= c.cpf || "—" %></td>
+              <td><%= c.contracts.length %></td>
+              <td><a href="/clientes/<%= c.id %>">Ver</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+  <a href="/">← Voltar ao dashboard</a>
+</div>
+</body>
+</html>

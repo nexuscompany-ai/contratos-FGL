@@ -1,0 +1,86 @@
+<%- include("partials/head", { title }) %>
+<div class="container narrow">
+  <h1>CONTRATO FGL BRASIL</h1>
+  <p class="muted">Tipo: <%= contract.tipoContrato %> · Valor FIPE: <%= contract.valorFipe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) %></p>
+
+  <div class="card">
+    <% if (error) { %>
+      <div class="flash"><%= error %></div>
+    <% } %>
+    <form method="post" action="/contrato/<%= contract.token %>">
+      <h2>Dados pessoais</h2>
+
+      <label>Nome completo *</label>
+      <input type="text" name="nomeCompleto" required value="<%= old ? old.nomeCompleto : '' %>" />
+
+      <label>CPF</label>
+      <input type="text" name="cpf" value="<%= old ? old.cpf : '' %>" />
+
+      <label>Data de nascimento</label>
+      <input type="date" name="dataNascimento" value="<%= old ? old.dataNascimento : '' %>" />
+
+      <label>Rua *</label>
+      <input type="text" name="rua" required value="<%= old ? old.rua : '' %>" />
+
+      <label>Bairro</label>
+      <input type="text" name="bairro" value="<%= old ? old.bairro : '' %>" />
+
+      <label>Cidade *</label>
+      <input type="text" name="cidade" required value="<%= old ? old.cidade : '' %>" />
+
+      <label>Estado *</label>
+      <input type="text" name="estado" required maxlength="2" placeholder="SP" value="<%= old ? old.estado : '' %>" />
+
+      <label>CEP</label>
+      <input type="text" name="cep" value="<%= old ? old.cep : '' %>" />
+
+      <label>Telefone *</label>
+      <input type="text" name="telefone" required value="<%= old ? old.telefone : '' %>" />
+
+      <label>E-mail *</label>
+      <input type="email" name="email" required value="<%= old ? old.email : '' %>" />
+
+      <h2 style="margin-top:24px;">Dados do veículo</h2>
+
+      <label>Placa *</label>
+      <input type="text" name="placa" required style="text-transform:uppercase;" value="<%= old ? old.placa : '' %>" />
+
+      <label>Marca</label>
+      <input type="text" name="marca" value="<%= old ? old.marca : '' %>" />
+
+      <label>Modelo *</label>
+      <input type="text" name="modelo" required value="<%= old ? old.modelo : '' %>" />
+
+      <label>Ano *</label>
+      <input type="text" name="ano" required value="<%= old ? old.ano : '' %>" />
+
+      <label>Renavam</label>
+      <input type="text" name="renavam" value="<%= old ? old.renavam : '' %>" />
+
+      <label>Chassi</label>
+      <input type="text" name="chassi" value="<%= old ? old.chassi : '' %>" />
+
+      <h2 style="margin-top:24px;">Termos do contrato</h2>
+      <div class="card" style="max-height:320px; overflow-y:auto; background:#fafbfc;">
+        <p><%= preambulo %></p>
+        <% clausulas.forEach(function(cl) { %>
+          <p><strong><%= cl.titulo %></strong></p>
+          <% cl.paragrafos.forEach(function(p) { %>
+            <p class="muted" style="margin:6px 0;"><%= p %></p>
+          <% }) %>
+        <% }) %>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" name="aceite" id="aceite" />
+        <label for="aceite" style="margin:0;">Li e concordo com os termos do contrato e com as condições do serviço de rastreamento (<%= textoAceite %>)</label>
+      </div>
+
+      <div class="actions">
+        <button class="btn block" type="submit">ACEITAR E ENVIAR CONTRATO</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

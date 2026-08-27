@@ -1,0 +1,17 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container narrow">
+  <h1>Contrato gerado com sucesso</h1>
+  <div class="card">
+    <p class="muted">Envie este link para o cliente preencher os dados e aceitar o contrato.</p>
+    <p><strong>Link para o cliente</strong></p>
+    <div class="linkbox" id="link"><%= link %></div>
+    <div class="actions">
+      <button class="btn secondary" onclick="navigator.clipboard.writeText(document.getElementById('link').innerText); this.innerText='Copiado!'">COPIAR LINK</button>
+      <a class="btn" href="mailto:?subject=Contrato FGL&body=Acesse o link para preencher e aceitar o contrato: <%= encodeURIComponent(link) %>">ENVIAR</a>
+    </div>
+  </div>
+  <a href="/">← Voltar ao dashboard</a>
+</div>
+</body>
+</html>

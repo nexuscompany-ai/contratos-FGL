@@ -1,0 +1,24 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container">
+  <h1>FGL CONTRATOS</h1>
+
+  <div class="stats">
+    <div class="stat"><div class="num"><%= stats.ativos %></div><div class="lbl">Contratos ativos</div></div>
+    <div class="stat"><div class="num"><%= stats.pendentes %></div><div class="lbl">Pendentes de aprovação</div></div>
+    <div class="stat"><div class="num"><%= stats.prestesAVencer %></div><div class="lbl">Prestes a vencer</div></div>
+    <div class="stat"><div class="num"><%= stats.vencidos %></div><div class="lbl">Contratos vencidos</div></div>
+  </div>
+
+  <div class="folders">
+    <a class="folder" href="/clientes">📁 Clientes</a>
+    <a class="folder" href="/contratos/ativos">📁 Contratos Ativos</a>
+    <a class="folder" href="/contratos/pendentes">📁 Contratos Pendentes</a>
+    <a class="folder" href="/contratos/prestes-a-vencer">📁 Prestes a Vencer</a>
+    <a class="folder" href="/contratos/vencidos">📁 Contratos Vencidos</a>
+  </div>
+
+  <a class="btn block" href="/contratos/novo">+ ENVIAR NOVO CONTRATO</a>
+</div>
+</body>
+</html>

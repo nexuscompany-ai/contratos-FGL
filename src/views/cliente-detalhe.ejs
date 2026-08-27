@@ -1,0 +1,39 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container">
+  <h1><%= client.nomeCompleto %></h1>
+
+  <div class="card">
+    <h2>Dados pessoais</h2>
+    <table>
+      <tr><th>CPF</th><td><%= client.cpf || "—" %></td></tr>
+      <tr><th>Data de nascimento</th><td><%= client.dataNascimento || "—" %></td></tr>
+      <tr><th>Endereço</th><td><%= client.endereco || "—" %></td></tr>
+      <tr><th>Telefone</th><td><%= client.telefone || "—" %></td></tr>
+      <tr><th>E-mail</th><td><%= client.email || "—" %></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Histórico de contratos</h2>
+    <table>
+      <thead><tr><th>Veículo</th><th>Tipo</th><th>Status</th><th>Início</th><th>Vencimento</th><th></th></tr></thead>
+      <tbody>
+        <% client.contracts.forEach(function(c) { %>
+          <tr>
+            <td><%= c.vehicle ? c.vehicle.placa : "—" %></td>
+            <td><%= c.tipoContrato %></td>
+            <td><span class="badge <%= c.status %>"><%= c.status %></span></td>
+            <td><%= c.startDate ? new Date(c.startDate).toLocaleDateString("pt-BR") : "—" %></td>
+            <td><%= c.endDate ? new Date(c.endDate).toLocaleDateString("pt-BR") : "—" %></td>
+            <td><a href="/contratos/<%= c.id %>">Ver</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <a href="/clientes">← Voltar a clientes</a>
+</div>
+</body>
+</html>
