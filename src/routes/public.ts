@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db";
-import { renderContractPdf, savePdfToDisk } from "../services/pdf";
+import { renderContractPdf } from "../services/pdf";
+import { savePdfToBlob } from "../services/blob";
 import { CLAUSULAS, PREAMBULO, TEXTO_ACEITE, CONTRATADA } from "../services/contractTerms";
 
 const router = Router();
@@ -109,7 +110,7 @@ router.post("/contrato/:token", async (req, res) => {
     veiculo: vehicle,
     aceite: acceptance,
   });
-  const pdfPath = savePdfToDisk(`${updated.id}-pendente.pdf`, pdfBytes);
+  const pdfPath = await savePdfToBlob(`${updated.id}-pendente.pdf`, pdfBytes);
   await prisma.contract.update({ where: { id: updated.id }, data: { pdfPath } });
 
   res.render("publico-status", {
@@ -124,7 +125,7 @@ router.post("/contrato/:token", async (req, res) => {
 router.get("/contrato/:token/pdf", async (req, res) => {
   const contract = await prisma.contract.findUnique({ where: { token: req.params.token } });
   if (!contract || !contract.pdfPath) return res.status(404).send("PDF não disponível.");
-  res.sendFile(contract.pdfPath);
+  res.redirect(contract.pdfPath);
 });
 
 export default router;

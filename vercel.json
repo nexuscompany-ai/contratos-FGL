@@ -1,4 +1,5 @@
 {
+  "framework": null,
   "buildCommand": "prisma generate",
   "functions": {
     "api/index.ts": {

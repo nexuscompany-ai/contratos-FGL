@@ -2,7 +2,8 @@ import { Router } from "express";
 import { nanoid } from "nanoid";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { renderContractPdf, savePdfToDisk } from "../services/pdf";
+import { renderContractPdf } from "../services/pdf";
+import { savePdfToBlob } from "../services/blob";
 import { sweepContratosVencidos, estaPrestesAVencer, diasParaVencer, DIAS_VIGENCIA } from "../services/contractLifecycle";
 
 const router = Router();
@@ -60,7 +61,7 @@ router.post("/contratos/novo", async (req, res) => {
     status: contract.status,
     createdAt: contract.createdAt,
   });
-  const pdfPath = savePdfToDisk(`${contract.id}-gerado.pdf`, pdfBytes);
+  const pdfPath = await savePdfToBlob(`${contract.id}-gerado.pdf`, pdfBytes);
   await prisma.contract.update({ where: { id: contract.id }, data: { pdfPath } });
 
   res.redirect(`/contratos/${contract.id}/link`);
@@ -126,7 +127,7 @@ router.get("/contratos/vencidos", async (req, res) => {
 router.get("/contratos/:id/pdf", async (req, res) => {
   const contract = await prisma.contract.findUnique({ where: { id: req.params.id } });
   if (!contract || !contract.pdfPath) return res.status(404).send("PDF não disponível.");
-  res.sendFile(contract.pdfPath);
+  res.redirect(contract.pdfPath);
 });
 
 router.get("/contratos/:id", async (req, res) => {
@@ -168,7 +169,7 @@ router.post("/contratos/:id/aprovar", async (req, res) => {
     aceite: contract.acceptance,
     vigencia: { startDate, endDate },
   });
-  const pdfPath = savePdfToDisk(`${contract.id}-final.pdf`, pdfBytes);
+  const pdfPath = await savePdfToBlob(`${contract.id}-final.pdf`, pdfBytes);
 
   await prisma.contract.update({
     where: { id: contract.id },

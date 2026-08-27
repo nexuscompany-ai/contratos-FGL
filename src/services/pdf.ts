@@ -196,6 +196,11 @@ export function pdfStoragePath(fileName: string): string {
   return path.join(process.cwd(), "storage", "pdfs", fileName);
 }
 
+/**
+ * Salva o PDF em disco local. Só funciona em ambiente com filesystem
+ * persistente (ex: desenvolvimento local). Em produção na Vercel, use
+ * savePdfToBlob (src/services/blob.ts) em vez desta função.
+ */
 export function savePdfToDisk(fileName: string, bytes: Uint8Array): string {
   const filePath = pdfStoragePath(fileName);
   fs.writeFileSync(filePath, bytes);
