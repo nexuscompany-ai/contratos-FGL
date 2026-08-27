@@ -13,10 +13,10 @@ import publicRoutes from "./routes/public";
 const app = express();
 
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+app.set("views", path.join(process.cwd(), "src", "views"));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(process.cwd(), "src", "public")));
 
 app.use(
   session({
@@ -45,7 +45,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).send(`Erro interno: ${err.message}`);
 });
 
-const port = Number(process.env.PORT) || 3000;
-app.listen(port, () => {
-  console.log(`FGL Contratos rodando em http://localhost:${port}`);
-});
+if (!process.env.VERCEL) {
+  const port = Number(process.env.PORT) || 3000;
+  app.listen(port, () => {
+    console.log(`FGL Contratos rodando em http://localhost:${port}`);
+  });
+}
+
+export default app;

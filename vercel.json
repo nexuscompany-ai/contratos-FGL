@@ -1,0 +1,11 @@
+{
+  "buildCommand": "prisma generate",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "{src/views/**,src/public/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
+  ]
+}
