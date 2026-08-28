@@ -32,22 +32,32 @@ router.get("/contratos/novo", (req, res) => {
 });
 
 router.post("/contratos/novo", async (req, res) => {
-  const { valorFipe, tipoContrato } = req.body;
-  const valor = Number(String(valorFipe).replace(/[^\d.,]/g, "").replace(",", "."));
+const { valorFipe, tipoContrato } = req.body;
+    const exigeFipe = tipoContrato === "Proteção Veicular";
+    const valor = Number(String(valorFipe || "").replace(/[^\d.,]/g, "").replace(",", "."));
 
-  if (!valor || valor <= 0 || !tipoContrato) {
-    return res.status(400).render("contrato-novo", {
-      title: "Enviar contrato",
-      error: "Informe um valor FIPE válido e o tipo de contrato.",
-    });
-  }
+    if (!tipoContrato) {
+          return res.status(400).render("contrato-novo", {
+                  title: "Enviar contrato",
+                  error: "Selecione o plano do contrato.",
+          });
+    }
+
+    if (exigeFipe && (!valor || valor <= 0)) {
+          return res.status(400).render("contrato-novo", {
+                  title: "Enviar contrato",
+                  error: "Informe um valor FIPE válido para o plano de Proteção Veicular.",
+          });
+    }
+
+    const valorFinal = exigeFipe ? valor : 0;
 
   const token = nanoid(8);
   const contract = await prisma.contract.create({
     data: {
       token,
       tipoContrato,
-      valorFipe: valor,
+      valorFipe: valorFinal,
       status: "GERADO",
       createdById: req.session.userId,
     },
