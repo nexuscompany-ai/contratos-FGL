@@ -6,15 +6,18 @@
     <% if (typeof error !== "undefined" && error) { %>
       <div class="flash"><%= error %></div>
     <% } %>
-    <form method="post" action="/contratos/novo">
-      <label>Valor da Tabela FIPE</label>
-      <input type="text" name="valorFipe" placeholder="R$ 00.000,00" required />
-
-      <label>Tipo de contrato</label>
-      <select name="tipoContrato" required>
-        <option value="Plano de Rastreamento">Plano de Rastreamento</option>
-        <option value="Plano de Rastreamento + Assistência 24h">Plano de Rastreamento + Assistência 24h</option>
+    <form method="post" action="/contratos/novo" id="form-novo-contrato">
+      <label>Plano</label>
+      <select name="tipoContrato" id="tipoContrato" required>
+        <option value="">Selecione o plano</option>
+        <option value="Proteção Veicular">Proteção Veicular</option>
+        <option value="Plano Básico">Plano Básico (Rastreamento)</option>
       </select>
+
+      <div id="campo-fipe">
+        <label>Valor da Tabela FIPE</label>
+        <input type="text" name="valorFipe" id="valorFipe" placeholder="R$ 00.000,00" />
+      </div>
 
       <div class="actions">
         <button class="btn block" type="submit">GERAR CONTRATO</button>
@@ -22,5 +25,24 @@
     </form>
   </div>
 </div>
+<script>
+  (function () {
+    var select = document.getElementById("tipoContrato");
+    var campoFipe = document.getElementById("campo-fipe");
+    var inputFipe = document.getElementById("valorFipe");
+
+    function atualizarCampoFipe() {
+      var ehProtecao = select.value === "Proteção Veicular";
+      campoFipe.style.display = ehProtecao ? "" : "none";
+      inputFipe.required = ehProtecao;
+      if (!ehProtecao) {
+        inputFipe.value = "";
+      }
+    }
+
+    select.addEventListener("change", atualizarCampoFipe);
+    atualizarCampoFipe();
+  })();
+</script>
 </body>
 </html>
