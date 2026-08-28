@@ -3,7 +3,7 @@
   "buildCommand": "prisma generate",
   "functions": {
     "api/index.ts": {
-      "includeFiles": "{src/views/**,src/public/**}"
+      "includeFiles": "{src/views/**,src/public/**,prisma/migrations/**}"
     }
   },
   "rewrites": [

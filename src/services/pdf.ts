@@ -193,16 +193,32 @@ export async function renderContractPdf(data: ContractPdfData): Promise<Uint8Arr
 }
 
 export function pdfStoragePath(fileName: string): string {
-  return path.join(process.cwd(), "storage", "pdfs", fileName);
+  const baseDir = process.env.VERCEL
+    ? path.join("/tmp", "storage", "pdfs")
+    : path.join(process.cwd(), "storage", "pdfs");
+  return path.join(baseDir, fileName);
 }
 
 /**
- * Salva o PDF em disco local. Só funciona em ambiente com filesystem
- * persistente (ex: desenvolvimento local). Em produção na Vercel, use
- * savePdfToBlob (src/services/blob.ts) em vez desta função.
+ * Salva o PDF em disco local (em /tmp na Vercel, sem persistência entre
+ * deploys/cold starts). Usado como fallback quando não há Blob Storage
+ * configurado — veja savePdfToBlob (src/services/blob.ts).
  */
 export function savePdfToDisk(fileName: string, bytes: Uint8Array): string {
   const filePath = pdfStoragePath(fileName);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, bytes);
   return filePath;
+}
+
+/**
+ * pdfPath tanto pode ser uma URL pública (Vercel Blob) quanto um caminho de
+ * arquivo local (fallback em disco) — decide entre redirect e sendFile.
+ */
+export function sendPdfResponse(res: import("express").Response, pdfPath: string) {
+  if (pdfPath.startsWith("http://") || pdfPath.startsWith("https://")) {
+    res.redirect(pdfPath);
+  } else {
+    res.sendFile(pdfPath);
+  }
 }

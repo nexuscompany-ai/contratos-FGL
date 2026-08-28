@@ -2,7 +2,7 @@ import { Router } from "express";
 import { nanoid } from "nanoid";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { renderContractPdf } from "../services/pdf";
+import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { sweepContratosVencidos, estaPrestesAVencer, diasParaVencer, DIAS_VIGENCIA } from "../services/contractLifecycle";
 
@@ -127,7 +127,7 @@ router.get("/contratos/vencidos", async (req, res) => {
 router.get("/contratos/:id/pdf", async (req, res) => {
   const contract = await prisma.contract.findUnique({ where: { id: req.params.id } });
   if (!contract || !contract.pdfPath) return res.status(404).send("PDF não disponível.");
-  res.redirect(contract.pdfPath);
+  sendPdfResponse(res, contract.pdfPath);
 });
 
 router.get("/contratos/:id", async (req, res) => {

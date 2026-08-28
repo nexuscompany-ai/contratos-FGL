@@ -1,4 +1,5 @@
 import { put, del } from "@vercel/blob";
+import { savePdfToDisk } from "./pdf";
 
 /**
  * Salva o PDF no Vercel Blob Storage (funciona em produção serverless,
@@ -7,8 +8,14 @@ import { put, del } from "@vercel/blob";
  *
  * Requer a env var BLOB_READ_WRITE_TOKEN, criada automaticamente ao
  * conectar um Vercel Blob Store ao projeto (Storage > Create Database > Blob).
+ * Sem essa env var (modo demo, sem Blob configurado), cai para disco local
+ * (em /tmp na Vercel) — os PDFs não persistem entre deploys nesse caso.
  */
 export async function savePdfToBlob(fileName: string, bytes: Uint8Array): Promise<string> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return savePdfToDisk(fileName, bytes);
+  }
+
   const blob = await put(`pdfs/${fileName}`, Buffer.from(bytes), {
     access: "public",
     contentType: "application/pdf",

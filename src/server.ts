@@ -9,6 +9,7 @@ import path from "path";
 import authRoutes from "./routes/auth";
 import adminRoutes from "./routes/admin";
 import publicRoutes from "./routes/public";
+import { ensureDatabaseReady } from "./db-bootstrap";
 
 const app = express();
 
@@ -17,6 +18,11 @@ app.set("views", path.join(process.cwd(), "src", "views"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "src", "public")));
+
+const dbReady = ensureDatabaseReady();
+app.use((req, res, next) => {
+  dbReady.then(() => next(), next);
+});
 
 app.use(
   session({
