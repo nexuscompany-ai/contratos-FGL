@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont } from "pdf-lib";
 import fs from "fs";
 import path from "path";
-import { CONTRATADA, PREAMBULO, CLAUSULAS, TEXTO_ACEITE } from "./contractTerms";
+import { CONTRATADA, PREAMBULO, clausulasComValorFipe, TEXTO_ACEITE } from "./contractTerms";
 
 export interface ContractPdfData {
   contractId: string;
@@ -160,7 +160,7 @@ export async function renderContractPdf(data: ContractPdfData): Promise<Uint8Arr
   w.paragraph(PREAMBULO, 9.5);
   w.spacer(6);
 
-  for (const clausula of CLAUSULAS) {
+  for (const clausula of clausulasComValorFipe(data.valorFipe)) {
     w.heading(clausula.titulo);
     for (const p of clausula.paragrafos) {
       w.paragraph(p);

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { prisma } from "../db";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
-import { CLAUSULAS, PREAMBULO, TEXTO_ACEITE, CONTRATADA } from "../services/contractTerms";
+import { clausulasComValorFipe, PREAMBULO, TEXTO_ACEITE, CONTRATADA } from "../services/contractTerms";
 
 const router = Router();
 
@@ -19,7 +19,7 @@ router.get("/contrato/:token", async (req, res) => {
       contract,
       error: null,
       old: null,
-      clausulas: CLAUSULAS,
+      clausulas: clausulasComValorFipe(contract.valorFipe),
       preambulo: PREAMBULO,
       textoAceite: TEXTO_ACEITE,
       contratada: CONTRATADA,
@@ -55,7 +55,7 @@ router.post("/contrato/:token", async (req, res) => {
         ? "É necessário aceitar os termos do contrato para continuar."
         : "Preencha todos os campos obrigatórios.",
       old: b,
-      clausulas: CLAUSULAS,
+      clausulas: clausulasComValorFipe(contract.valorFipe),
       preambulo: PREAMBULO,
       textoAceite: TEXTO_ACEITE,
       contratada: CONTRATADA,

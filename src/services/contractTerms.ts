@@ -69,7 +69,7 @@ export const CLAUSULAS: ContractClause[] = [
   {
     titulo: "6. MULTA",
     paragrafos: [
-      "6.1. Não sendo o veículo localizado no período de 30 (trinta) dias a contar do momento da comunicação do furto ou roubo à Central de Atendimento, será devido ao CONTRATANTE, se cumpridas as cláusulas obrigacionais, o pagamento da multa, conforme valor da tabela FIPE vigente à época do fato, no valor máximo de R$18.000 (Dezoito mil Reais), mesmo que o valor de tabela do veículo seja superior a este estipulado, estando o CONTRATANTE ciente que não receberá qualquer valor excedente ao fixado nesta clausula.",
+      "6.1. Não sendo o veículo localizado no período de 30 (trinta) dias a contar do momento da comunicação do furto ou roubo à Central de Atendimento, será devido ao CONTRATANTE, se cumpridas as cláusulas obrigacionais, o pagamento da multa, conforme valor da tabela FIPE vigente à época do fato, no valor máximo de {{VALOR_FIPE}}, mesmo que o valor de tabela do veículo seja superior a este estipulado, estando o CONTRATANTE ciente que não receberá qualquer valor excedente ao fixado nesta clausula.",
       "6.2. Qualquer vício oculto do veículo, chassis remarcado ou eventos que depreciem o valor de mercado, a multa contratual será reduzida à metade do valor ajustado.",
       "6.3. Sendo o veículo furtado ou roubado e posteriormente localizado por quem quer que seja, não será devida a multa por parte da CONTRATADA, salvo se comprovada a sua perda total ou o comprometimento da estrutura/mecânica/elétrica, desmontagem integral ou parcial, em todos os casos citados, quando a reforma seja superior a 75% (setenta e cinco por cento) do bem protegido, cabendo assim a multa prevista, desde que o CONTRATANTE não tenha dado causa ou cooperado para tais danos.",
       "Parágrafo único: O CONTRATANTE deverá, neste caso, comprovar o dano através de laudo fotográfico, devendo disponibilizar o veículo para vistoria por parte da CONTRATADA, bem como providenciar três orçamentos de empresas indicadas pela CONTRATADA.",
@@ -142,3 +142,17 @@ export const CLAUSULAS: ContractClause[] = [
 ];
 
 export const TEXTO_ACEITE = "Aceito os Termos e Condições.";
+
+/**
+ * Retorna as cláusulas com o placeholder {{VALOR_FIPE}} (cláusula 6.1, teto
+ * da multa) substituído pelo valor FIPE real do contrato — o contrato
+ * original tinha esse teto fixo em R$18.000, mas ele deve acompanhar o
+ * valor digitado em cada contrato.
+ */
+export function clausulasComValorFipe(valorFipe: number): ContractClause[] {
+  const valorFormatado = valorFipe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return CLAUSULAS.map((clausula) => ({
+    ...clausula,
+    paragrafos: clausula.paragrafos.map((p) => p.replace("{{VALOR_FIPE}}", valorFormatado)),
+  }));
+}

@@ -33,7 +33,7 @@ router.get("/contratos/novo", (req, res) => {
 
 router.post("/contratos/novo", async (req, res) => {
   const { valorFipe, tipoContrato } = req.body;
-  const valor = Number(String(valorFipe).replace(/[^\d.,]/g, "").replace(",", "."));
+  const valor = Number(String(valorFipe).replace(/[^\d,]/g, "").replace(",", "."));
 
   if (!valor || valor <= 0 || !tipoContrato) {
     return res.status(400).render("contrato-novo", {

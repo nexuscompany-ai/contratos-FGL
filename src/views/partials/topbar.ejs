@@ -1,14 +1,11 @@
 <div class="topbar">
   <a class="brand" href="/">FGL CONTRATOS</a>
-  <nav>
-    <a href="/">Dashboard</a>
-    <a href="/contratos/novo">Enviar contrato</a>
-    <a href="/clientes">Clientes</a>
-    <% if (typeof userName !== "undefined" && userName) { %>
+  <% if (typeof userName !== "undefined" && userName) { %>
+    <nav>
       <span class="muted" style="color:#dbe3ee;"><%= userName %></span>
       <form method="post" action="/logout">
         <button class="link" type="submit">Sair</button>
       </form>
-    <% } %>
-  </nav>
+    </nav>
+  <% } %>
 </div>
