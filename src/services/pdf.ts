@@ -199,8 +199,12 @@ function drawHeader(page: PDFPage, bold: PDFFont, font: PDFFont, logo: PDFImage 
   page.drawRectangle({ x: 0, y: PAGE_HEIGHT - HEADER_HEIGHT, width: PAGE_WIDTH, height: HEADER_HEIGHT, color: COLOR_PRIMARY });
 
   let textX = MARGIN;
+  let subtitleY = PAGE_HEIGHT - 52;
+
   if (logo) {
-    const logoHeight = 40;
+    // A logo já traz o nome "FGL BRASIL" desenhado — não repete o texto,
+    // só o subtítulo do contrato ao lado, centralizado com a marca.
+    const logoHeight = 56;
     const logoWidth = (logo.width / logo.height) * logoHeight;
     page.drawImage(logo, {
       x: MARGIN,
@@ -209,16 +213,18 @@ function drawHeader(page: PDFPage, bold: PDFFont, font: PDFFont, logo: PDFImage 
       height: logoHeight,
     });
     textX = MARGIN + logoWidth + 16;
+    subtitleY = PAGE_HEIGHT - HEADER_HEIGHT / 2 - 5;
+    page.drawText("Contrato de Proteção Veicular", { x: textX, y: subtitleY, size: 12, font: bold, color: COLOR_PRIMARY_TEXT });
+  } else {
+    page.drawText("FGL BRASIL", { x: textX, y: PAGE_HEIGHT - 34, size: 17, font: bold, color: COLOR_PRIMARY_TEXT });
+    page.drawText("Contrato de Proteção Veicular", {
+      x: textX,
+      y: subtitleY,
+      size: 10,
+      font,
+      color: COLOR_PRIMARY_TEXT_MUTED,
+    });
   }
-
-  page.drawText("FGL BRASIL", { x: textX, y: PAGE_HEIGHT - 34, size: 17, font: bold, color: COLOR_PRIMARY_TEXT });
-  page.drawText("Contrato de Proteção Veicular", {
-    x: textX,
-    y: PAGE_HEIGHT - 52,
-    size: 10,
-    font,
-    color: COLOR_PRIMARY_TEXT_MUTED,
-  });
 
   const numero = `Nº ${contractId.slice(0, 8).toUpperCase()}`;
   const numeroWidth = bold.widthOfTextAtSize(numero, 10);
