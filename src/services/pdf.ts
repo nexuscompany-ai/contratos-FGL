@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage, RGB } from "pdf-lib";
 import fs from "fs";
 import path from "path";
 import { CONTRATADA, PREAMBULO, clausulasComValorFipe, TEXTO_ACEITE } from "./contractTerms";
@@ -14,7 +14,6 @@ export interface ContractPdfData {
     nomeCompleto: string;
     cpf?: string | null;
     dataNascimento?: string | null;
-    endereco?: string | null;
     telefone?: string | null;
     email?: string | null;
   } | null;
@@ -40,6 +39,16 @@ const MARGIN = 50;
 const PAGE_WIDTH = 595.28; // A4
 const PAGE_HEIGHT = 841.89;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+const HEADER_HEIGHT = 78;
+
+const COLOR_PRIMARY = rgb(0.122, 0.227, 0.373); // #1f3a5f
+const COLOR_PRIMARY_TEXT = rgb(1, 1, 1);
+const COLOR_PRIMARY_TEXT_MUTED = rgb(0.82, 0.86, 0.92);
+const COLOR_HEADING = rgb(0.122, 0.227, 0.373);
+const COLOR_TEXT = rgb(0.13, 0.15, 0.18);
+const COLOR_MUTED = rgb(0.42, 0.45, 0.5);
+const COLOR_CARD_BG = rgb(0.965, 0.97, 0.976);
+const COLOR_CARD_BORDER = rgb(0.85, 0.87, 0.9);
 
 function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -47,6 +56,15 @@ function formatCurrency(value: number): string {
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("pt-BR");
+}
+
+function loadLogoBytes(): Buffer | null {
+  const candidates = ["logo.png", "logo.jpg", "logo.jpeg"];
+  for (const name of candidates) {
+    const p = path.join(process.cwd(), "src", "public", name);
+    if (fs.existsSync(p)) return fs.readFileSync(p);
+  }
+  return null;
 }
 
 class Writer {
@@ -65,23 +83,31 @@ class Writer {
     }
   }
 
+  currentPage() {
+    return this.page;
+  }
+
+  setY(y: number) {
+    this.y = y;
+  }
+
   title(text: string) {
     this.newPageIfNeeded(20);
-    this.page.drawText(text, { x: MARGIN, y: this.y, size: 15, font: this.bold, color: rgb(0.1, 0.1, 0.1) });
+    this.page.drawText(text, { x: MARGIN, y: this.y, size: 15, font: this.bold, color: COLOR_TEXT });
     this.y -= 22;
   }
 
   heading(text: string) {
     this.newPageIfNeeded(24);
     this.y -= 6;
-    this.page.drawText(text, { x: MARGIN, y: this.y, size: 12, font: this.bold, color: rgb(0.1, 0.1, 0.1) });
+    this.page.drawText(text, { x: MARGIN, y: this.y, size: 12, font: this.bold, color: COLOR_HEADING });
     this.y -= 18;
   }
 
   label(label: string, value: string) {
     this.newPageIfNeeded(16);
     this.page.drawText(label, { x: MARGIN, y: this.y, size: 10, font: this.bold, color: rgb(0.3, 0.3, 0.3) });
-    this.page.drawText(value || "—", { x: MARGIN + 160, y: this.y, size: 10, font: this.font, color: rgb(0.1, 0.1, 0.1) });
+    this.page.drawText(value || "—", { x: MARGIN + 160, y: this.y, size: 10, font: this.font, color: COLOR_TEXT });
     this.y -= 15;
   }
 
@@ -93,7 +119,7 @@ class Writer {
       const width = this.font.widthOfTextAtSize(test, size);
       if (width > CONTENT_WIDTH) {
         this.newPageIfNeeded(13);
-        this.page.drawText(line, { x: MARGIN, y: this.y, size, font: this.font });
+        this.page.drawText(line, { x: MARGIN, y: this.y, size, font: this.font, color: COLOR_TEXT });
         this.y -= 13;
         line = word;
       } else {
@@ -102,7 +128,7 @@ class Writer {
     }
     if (line) {
       this.newPageIfNeeded(13);
-      this.page.drawText(line, { x: MARGIN, y: this.y, size, font: this.font });
+      this.page.drawText(line, { x: MARGIN, y: this.y, size, font: this.font, color: COLOR_TEXT });
       this.y -= 13;
     }
     this.y -= 5;
@@ -111,51 +137,161 @@ class Writer {
   spacer(h = 10) {
     this.y -= h;
   }
+
+  /**
+   * Bloco de informações em card: título colorido acima de uma caixa com
+   * fundo claro, campos organizados em duas colunas (rótulo pequeno em
+   * cima, valor em baixo) em vez da lista solta de "rótulo: valor".
+   */
+  infoCard(title: string, fields: Array<{ label: string; value: string }>) {
+    const rows = Math.ceil(fields.length / 2);
+    const rowHeight = 32;
+    const boxHeight = rows * rowHeight + 20;
+
+    this.newPageIfNeeded(boxHeight + 24);
+    this.y -= 4;
+    this.page.drawText(title, { x: MARGIN, y: this.y, size: 11, font: this.bold, color: COLOR_HEADING });
+    this.y -= 16;
+
+    const boxTop = this.y;
+    const boxBottom = boxTop - boxHeight;
+    this.page.drawRectangle({
+      x: MARGIN,
+      y: boxBottom,
+      width: CONTENT_WIDTH,
+      height: boxHeight,
+      color: COLOR_CARD_BG,
+      borderColor: COLOR_CARD_BORDER,
+      borderWidth: 1,
+    });
+
+    const colWidth = CONTENT_WIDTH / 2;
+    const padX = 14;
+    const padY = 14;
+    let fieldY = boxTop - padY - 9;
+
+    fields.forEach((field, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = MARGIN + padX + col * colWidth;
+      const rowY = fieldY - row * rowHeight;
+      this.page.drawText(field.label.toUpperCase(), {
+        x,
+        y: rowY,
+        size: 7.5,
+        font: this.bold,
+        color: COLOR_MUTED,
+      });
+      this.page.drawText(field.value || "—", {
+        x,
+        y: rowY - 13,
+        size: 10.5,
+        font: this.font,
+        color: COLOR_TEXT,
+      });
+    });
+
+    this.y = boxBottom - 14;
+  }
+}
+
+function drawHeader(page: PDFPage, bold: PDFFont, font: PDFFont, logo: PDFImage | null, contractId: string) {
+  page.drawRectangle({ x: 0, y: PAGE_HEIGHT - HEADER_HEIGHT, width: PAGE_WIDTH, height: HEADER_HEIGHT, color: COLOR_PRIMARY });
+
+  let textX = MARGIN;
+  if (logo) {
+    const logoHeight = 40;
+    const logoWidth = (logo.width / logo.height) * logoHeight;
+    page.drawImage(logo, {
+      x: MARGIN,
+      y: PAGE_HEIGHT - HEADER_HEIGHT / 2 - logoHeight / 2,
+      width: logoWidth,
+      height: logoHeight,
+    });
+    textX = MARGIN + logoWidth + 16;
+  }
+
+  page.drawText("FGL BRASIL", { x: textX, y: PAGE_HEIGHT - 34, size: 17, font: bold, color: COLOR_PRIMARY_TEXT });
+  page.drawText("Contrato de Proteção Veicular", {
+    x: textX,
+    y: PAGE_HEIGHT - 52,
+    size: 10,
+    font,
+    color: COLOR_PRIMARY_TEXT_MUTED,
+  });
+
+  const numero = `Nº ${contractId.slice(0, 8).toUpperCase()}`;
+  const numeroWidth = bold.widthOfTextAtSize(numero, 10);
+  page.drawText(numero, {
+    x: PAGE_WIDTH - MARGIN - numeroWidth,
+    y: PAGE_HEIGHT - 34,
+    size: 10,
+    font: bold,
+    color: COLOR_PRIMARY_TEXT,
+  });
 }
 
 export async function renderContractPdf(data: ContractPdfData): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-  const w = new Writer(doc, font, bold);
 
-  w.title("CONTRATO DE PROTEÇÃO VEICULAR");
-  w.label("Contrato nº", data.contractId.slice(0, 8).toUpperCase());
+  const logoBytes = loadLogoBytes();
+  let logo: PDFImage | null = null;
+  if (logoBytes) {
+    try {
+      logo = await doc.embedPng(logoBytes);
+    } catch {
+      try {
+        logo = await doc.embedJpg(logoBytes);
+      } catch {
+        logo = null;
+      }
+    }
+  }
+
+  const w = new Writer(doc, font, bold);
+  drawHeader(w.currentPage(), bold, font, logo, data.contractId);
+  w.setY(PAGE_HEIGHT - HEADER_HEIGHT - 26);
+
   w.label("Tipo de contrato", data.tipoContrato);
   w.label("Valor Tabela FIPE", formatCurrency(data.valorFipe));
   w.label("Data de geração", formatDate(data.createdAt));
   w.label("Status", data.status);
-  w.spacer(8);
-
-  w.heading("CONTRATADA");
-  w.label("Razão social", CONTRATADA.razaoSocial);
-  w.label("CNPJ", CONTRATADA.cnpj);
-  w.label("Endereço", CONTRATADA.endereco);
-  w.spacer(8);
-
-  w.heading("CONTRATANTE");
-  if (data.cliente) {
-    w.label("Nome completo", data.cliente.nomeCompleto);
-    if (data.cliente.cpf) w.label("CPF", data.cliente.cpf);
-    if (data.cliente.dataNascimento) w.label("Data de nascimento", data.cliente.dataNascimento);
-    w.label("Endereço", data.cliente.endereco || "");
-    w.label("Telefone", data.cliente.telefone || "");
-    w.label("E-mail", data.cliente.email || "");
-  } else {
-    w.paragraph("A ser preenchido pelo CONTRATANTE.");
-  }
-  w.spacer(8);
-
-  w.heading("VEÍCULO");
-  if (data.veiculo) {
-    w.label("Placa", data.veiculo.placa);
-    w.label("Modelo e ano", `${data.veiculo.marca || ""} ${data.veiculo.modelo || ""} ${data.veiculo.ano || ""}`.trim());
-    if (data.veiculo.renavam) w.label("Renavam", data.veiculo.renavam);
-    if (data.veiculo.chassi) w.label("Chassi", data.veiculo.chassi);
-  } else {
-    w.paragraph("A ser preenchido pelo CONTRATANTE.");
-  }
   w.spacer(10);
+
+  w.infoCard("CONTRATADA", [
+    { label: "Razão social", value: CONTRATADA.razaoSocial },
+    { label: "CNPJ", value: CONTRATADA.cnpj },
+    { label: "Endereço", value: CONTRATADA.endereco },
+  ]);
+
+  if (data.cliente) {
+    w.infoCard("CONTRATANTE", [
+      { label: "Nome completo", value: data.cliente.nomeCompleto },
+      { label: "CPF", value: data.cliente.cpf || "" },
+      { label: "Data de nascimento", value: data.cliente.dataNascimento || "" },
+      { label: "Telefone", value: data.cliente.telefone || "" },
+      { label: "E-mail", value: data.cliente.email || "" },
+    ]);
+  } else {
+    w.heading("CONTRATANTE");
+    w.paragraph("A ser preenchido pelo CONTRATANTE.");
+    w.spacer(4);
+  }
+
+  if (data.veiculo) {
+    w.infoCard("VEÍCULO", [
+      { label: "Placa", value: data.veiculo.placa },
+      { label: "Modelo e ano", value: `${data.veiculo.marca || ""} ${data.veiculo.modelo || ""} ${data.veiculo.ano || ""}`.trim() },
+      { label: "Renavam", value: data.veiculo.renavam || "" },
+      { label: "Chassi", value: data.veiculo.chassi || "" },
+    ]);
+  } else {
+    w.heading("VEÍCULO");
+    w.paragraph("A ser preenchido pelo CONTRATANTE.");
+    w.spacer(4);
+  }
 
   w.paragraph(PREAMBULO, 9.5);
   w.spacer(6);

@@ -43,7 +43,7 @@ router.post("/contrato/:token", async (req, res) => {
   }
 
   const b = req.body;
-  const required = ["nomeCompleto", "rua", "cidade", "estado", "telefone", "email", "placa", "modelo", "ano"];
+  const required = ["nomeCompleto", "telefone", "email", "placa", "modelo", "ano"];
   const missing = required.filter((f) => !String(b[f] || "").trim());
   const aceite = b.aceite === "on";
 
@@ -62,14 +62,11 @@ router.post("/contrato/:token", async (req, res) => {
     });
   }
 
-  const endereco = [b.rua, b.bairro, b.cidade, b.estado, b.cep, b.pais || "Brasil"].filter(Boolean).join(", ");
-
   const client = await prisma.client.create({
     data: {
       nomeCompleto: b.nomeCompleto.trim(),
       cpf: (b.cpf || "").trim(),
       dataNascimento: (b.dataNascimento || "").trim() || null,
-      endereco,
       telefone: b.telefone.trim(),
       email: b.email.trim(),
     },

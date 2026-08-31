@@ -17,7 +17,6 @@
         <tr><th>CPF</th><td><%= contract.client.cpf || "—" %></td></tr>
         <tr><th>Telefone</th><td><%= contract.client.telefone || "—" %></td></tr>
         <tr><th>E-mail</th><td><%= contract.client.email || "—" %></td></tr>
-        <tr><th>Endereço</th><td><%= contract.client.endereco || "—" %></td></tr>
       <% } %>
       <% if (contract.acceptance) { %>
         <tr><th>Aceito em</th><td><%= new Date(contract.acceptance.acceptedAt).toLocaleString("pt-BR") %> (IP: <%= contract.acceptance.ip || "—" %>)</td></tr>
