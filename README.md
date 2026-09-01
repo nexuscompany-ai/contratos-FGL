@@ -16,37 +16,34 @@ FGL gera contrato (valor FIPE + tipo)
 
 ## Stack
 
-Node.js + TypeScript + Express + Prisma (SQLite) + EJS + pdf-lib (geração do PDF do contrato com o texto oficial do Contrato de Proteção Veicular).
+Node.js + TypeScript + Express + Prisma (PostgreSQL em produção, SQLite em dev local) + EJS + pdf-lib (geração do PDF do contrato com o texto oficial do Contrato de Proteção Veicular).
 
-## Modo demo (padrão, zero configuração)
+## Produção (Vercel)
 
-Sem nenhuma env var configurada, o app roda sozinho: cria um banco SQLite
-automaticamente na primeira requisição, cria um usuário admin padrão
-(`admin@fgl.com.br` / `admin123`, ou os valores de `ADMIN_EMAIL`/`ADMIN_PASSWORD`
-se você definir) e salva os PDFs em disco. Não precisa de Postgres nem de
-Vercel Blob — é só pra navegar pela plataforma, ver o design e o fluxo.
+O projeto está conectado a um banco Postgres real (Neon, via Vercel Storage)
+e a um Vercel Blob Store — as env vars `DATABASE_URL` e `BLOB_READ_WRITE_TOKEN`
+já são injetadas automaticamente pela Vercel em cada deploy. Os dados
+(contratos, clientes, PDFs) persistem de verdade entre deploys e cold starts.
 
-**Isso não persiste de verdade:** na Vercel o SQLite fica em `/tmp`, que é
-apagado a cada cold start/novo deploy. Dados de teste (contratos, clientes)
-não sobrevivem entre sessões. Quando for pra produção real, siga a seção
-"Deploy em produção (com persistência)" abaixo.
+Se o projeto for clonado para uma nova conta/ambiente Vercel do zero:
+
+1. **Storage → Create Database → Postgres** (cria `DATABASE_URL` automaticamente) e **Storage → Create Database → Blob** (cria `BLOB_READ_WRITE_TOKEN` automaticamente).
+2. Configure `SESSION_SECRET`, `BASE_URL`, `ADMIN_*` em Project Settings → Environment Variables.
+3. Aplique as migrations existentes em `prisma/migrations` contra o novo banco (`npx prisma migrate deploy`).
+4. Push na branch conectada dispara o deploy — o `vercel.json` já expõe o Express como função serverless em `api/index.ts`.
+
+## Desenvolvimento local
+
+Sem `DATABASE_URL` definida, o app usa um SQLite local (`./dev.db`) só para
+rodar na sua máquina — isso não tem relação com o banco de produção.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Acesse `http://localhost:3000` e entre com `admin@fgl.com.br` / `admin123`.
-
-## Deploy em produção (com persistência)
-
-Quando quiser que os dados fiquem salvos de verdade:
-
-1. Troque `provider = "sqlite"` por `provider = "postgresql"` em `prisma/schema.prisma`.
-2. No dashboard da Vercel: **Storage → Create Database → Postgres** (cria `DATABASE_URL` automaticamente) e **Storage → Create Database → Blob** (cria `BLOB_READ_WRITE_TOKEN` automaticamente) — com essas env vars presentes o app já usa Postgres/Blob em vez do modo demo.
-3. Configure `SESSION_SECRET`, `BASE_URL`, `ADMIN_*` em Project Settings → Environment Variables.
-4. Rode `npx prisma migrate dev` localmente (com o `DATABASE_URL` de produção) para gerar a migration do Postgres, depois `npx prisma migrate deploy` para aplicá-la, e `npm run seed` uma vez para criar o admin.
-5. Push na branch conectada dispara o deploy — o `vercel.json` já expõe o Express como função serverless em `api/index.ts`.
+Acesse `http://localhost:3000` e entre com `admin@fgl.com.br` / `admin123`
+(ou os valores de `ADMIN_EMAIL`/`ADMIN_PASSWORD`, se definidos).
 
 ## Estrutura
 
