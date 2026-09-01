@@ -1,7 +1,12 @@
 <%- include("partials/head", { title }) %>
 <div class="container narrow">
-  <h1>CONTRATO FGL BRASIL</h1>
-  <p class="muted">Tipo: <%= contract.tipoContrato %> · Valor FIPE: <%= contract.valorFipe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) %></p>
+  <div style="text-align:center; margin-bottom:24px;">
+    <img src="/logo.jpg" alt="FGL Rastreamento" style="height:48px; width:auto; margin-bottom:10px;" />
+    <div style="font-weight:700; font-size:16px;">FGL Rastreamento</div>
+  </div>
+
+  <h1>Contrato de Rastreamento</h1>
+  <p class="subtitle">Preencha seus dados para finalizar a contratação. Tipo: <%= contract.tipoContrato %> · Valor FIPE: <%= contract.valorFipe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) %></p>
 
   <div class="card">
     <% if (error) { %>
@@ -25,7 +30,7 @@
       <label>E-mail *</label>
       <input type="email" name="email" required value="<%= old ? old.email : '' %>" />
 
-      <h2 style="margin-top:24px;">Dados do veículo</h2>
+      <h2 style="margin-top:28px;">Dados do veículo</h2>
 
       <label>Placa *</label>
       <input type="text" name="placa" required style="text-transform:uppercase;" value="<%= old ? old.placa : '' %>" />
@@ -45,8 +50,8 @@
       <label>Chassi</label>
       <input type="text" name="chassi" value="<%= old ? old.chassi : '' %>" />
 
-      <h2 style="margin-top:24px;">Termos do contrato</h2>
-      <div class="card" style="max-height:320px; overflow-y:auto; background:#fafbfc;">
+      <h2 style="margin-top:28px;">Leia seu contrato</h2>
+      <div class="card" style="max-height:320px; overflow-y:auto; background:var(--bg);">
         <p><%= preambulo %></p>
         <% clausulas.forEach(function(cl) { %>
           <p><strong><%= cl.titulo %></strong></p>
@@ -58,11 +63,11 @@
 
       <div class="checkbox-row">
         <input type="checkbox" name="aceite" id="aceite" />
-        <label for="aceite" style="margin:0;">Li e concordo com os termos do contrato e com as condições do serviço de rastreamento (<%= textoAceite %>)</label>
+        <label for="aceite" style="margin:0;">Li e concordo com os termos e condições do contrato (<%= textoAceite %>)</label>
       </div>
 
       <div class="actions">
-        <button class="btn block" type="submit">ACEITAR E ENVIAR CONTRATO</button>
+        <button class="btn block" type="submit">Aceitar contrato</button>
       </div>
     </form>
   </div>

@@ -1,7 +1,9 @@
 <%- include("partials/head", { title }) %>
 <%- include("partials/topbar", { userName }) %>
 <div class="container narrow">
-  <h1>Enviar contrato</h1>
+  <a class="back-link" href="/">← Voltar</a>
+  <h1>Novo contrato</h1>
+  <p class="subtitle">Preencha as informações para gerar um novo contrato.</p>
   <div class="card">
     <% if (typeof error !== "undefined" && error) { %>
       <div class="flash"><%= error %></div>
@@ -16,11 +18,11 @@
 
       <div id="campo-fipe">
         <label>Valor da Tabela FIPE</label>
-        <input type="text" name="valorFipe" id="valorFipe" inputmode="numeric" placeholder="R$ 0,00" />
+        <input type="text" class="fipe-display" name="valorFipe" id="valorFipe" inputmode="numeric" placeholder="R$ 0,00" />
       </div>
 
       <div class="actions">
-        <button class="btn block" type="submit">GERAR CONTRATO</button>
+        <button class="btn block" type="submit">Gerar contrato</button>
       </div>
     </form>
   </div>

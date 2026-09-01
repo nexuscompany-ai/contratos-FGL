@@ -1,6 +1,7 @@
 <%- include("partials/head", { title }) %>
 <%- include("partials/topbar", { userName }) %>
 <div class="container">
+  <a class="back-link" href="javascript:history.back()">← Voltar</a>
   <h1><%= contract.client ? contract.client.nomeCompleto : "Contrato #" + contract.id.slice(0,8).toUpperCase() %></h1>
 
   <div class="card">
@@ -35,14 +36,12 @@
         <a class="btn secondary" href="/contratos/<%= contract.id %>/pdf" target="_blank">Visualizar / baixar PDF</a>
       <% } %>
       <% if (contract.status === "PENDENTE") { %>
-        <form method="post" action="/contratos/<%= contract.id %>/aprovar" onsubmit="return confirm('Aprovar este contrato? Isso vai gerar o PDF final e ativar a vigência de 1 ano.');">
-          <button class="btn success" type="submit">APROVAR CONTRATO</button>
+        <form method="post" action="/contratos/<%= contract.id %>/aprovar" onsubmit="return confirm('Aprovar contrato?\n\nO contrato será finalizado e passará para a categoria de contratos ativos.');">
+          <button class="btn success" type="submit">Aprovar contrato</button>
         </form>
       <% } %>
     </div>
   </div>
-
-  <a href="/">← Voltar ao dashboard</a>
 </div>
 </body>
 </html>

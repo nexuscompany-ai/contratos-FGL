@@ -1,11 +1,16 @@
 <%- include("partials/head", { title }) %>
 <%- include("partials/topbar", { userName }) %>
 <div class="container">
+  <a class="back-link" href="/">← Voltar</a>
   <h1><%= heading %></h1>
   <div class="card">
     <% if (contratos.length === 0) { %>
-      <p class="muted">Nenhum contrato aqui.</p>
+      <div class="empty-state">
+        <strong>Nenhum contrato aqui</strong>
+        Quando houver contratos nesta categoria, eles aparecerão aqui.
+      </div>
     <% } else { %>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr>
@@ -35,9 +40,9 @@
           <% }) %>
         </tbody>
       </table>
+      </div>
     <% } %>
   </div>
-  <a href="/">← Voltar ao dashboard</a>
 </div>
 </body>
 </html>

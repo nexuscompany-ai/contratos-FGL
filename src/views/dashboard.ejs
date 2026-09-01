@@ -1,7 +1,8 @@
 <%- include("partials/head", { title }) %>
 <%- include("partials/topbar", { userName }) %>
 <div class="container">
-  <h1>FGL CONTRATOS</h1>
+  <h1>Contratos</h1>
+  <p class="subtitle">Visão geral da operação</p>
 
   <div class="stats">
     <div class="stat"><div class="num"><%= stats.ativos %></div><div class="lbl">Contratos ativos</div></div>
@@ -11,14 +12,14 @@
   </div>
 
   <div class="folders">
-    <a class="folder" href="/clientes">📁 Clientes</a>
-    <a class="folder" href="/contratos/ativos">📁 Contratos Ativos</a>
-    <a class="folder" href="/contratos/pendentes">📁 Contratos Pendentes</a>
-    <a class="folder" href="/contratos/prestes-a-vencer">📁 Prestes a Vencer</a>
-    <a class="folder" href="/contratos/vencidos">📁 Contratos Vencidos</a>
+    <a class="folder" href="/clientes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Clientes</a>
+    <a class="folder" href="/contratos/ativos"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Ativos</a>
+    <a class="folder" href="/contratos/pendentes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Pendentes</a>
+    <a class="folder" href="/contratos/prestes-a-vencer"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Prestes a Vencer</a>
+    <a class="folder" href="/contratos/vencidos"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Vencidos</a>
   </div>
 
-  <a class="btn block" href="/contratos/novo">+ ENVIAR NOVO CONTRATO</a>
+  <a class="btn block" href="/contratos/novo">+ Novo contrato</a>
 </div>
 </body>
 </html>

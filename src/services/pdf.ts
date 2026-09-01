@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage, RGB } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from "pdf-lib";
 import fs from "fs";
 import path from "path";
 import { CONTRATADA, PREAMBULO, clausulasComValorFipe, TEXTO_ACEITE } from "./contractTerms";
@@ -41,14 +41,12 @@ const PAGE_HEIGHT = 841.89;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const HEADER_HEIGHT = 78;
 
-const COLOR_PRIMARY = rgb(0.122, 0.227, 0.373); // #1f3a5f
-const COLOR_PRIMARY_TEXT = rgb(1, 1, 1);
-const COLOR_PRIMARY_TEXT_MUTED = rgb(0.82, 0.86, 0.92);
-const COLOR_HEADING = rgb(0.122, 0.227, 0.373);
-const COLOR_TEXT = rgb(0.13, 0.15, 0.18);
-const COLOR_MUTED = rgb(0.42, 0.45, 0.5);
-const COLOR_CARD_BG = rgb(0.965, 0.97, 0.976);
-const COLOR_CARD_BORDER = rgb(0.85, 0.87, 0.9);
+const COLOR_ORANGE = rgb(0.922, 0.412, 0.176); // #eb692d — laranja FGL
+const COLOR_TEXT = rgb(0.09, 0.09, 0.09); // preto
+const COLOR_MUTED = rgb(0.45, 0.45, 0.45);
+const COLOR_CARD_BG = rgb(0.98, 0.98, 0.976);
+const COLOR_CARD_BORDER = rgb(0.906, 0.898, 0.886);
+const COLOR_HEADING = COLOR_TEXT;
 
 function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -196,15 +194,12 @@ class Writer {
 }
 
 function drawHeader(page: PDFPage, bold: PDFFont, font: PDFFont, logo: PDFImage | null, contractId: string) {
-  page.drawRectangle({ x: 0, y: PAGE_HEIGHT - HEADER_HEIGHT, width: PAGE_WIDTH, height: HEADER_HEIGHT, color: COLOR_PRIMARY });
-
+  // Cabeçalho branco, com a logo e o nome da marca — o laranja aparece só
+  // como uma linha fina de destaque, não como bloco de cor atrás do texto.
   let textX = MARGIN;
-  let subtitleY = PAGE_HEIGHT - 52;
 
   if (logo) {
-    // A logo já traz o nome "FGL BRASIL" desenhado — não repete o texto,
-    // só o subtítulo do contrato ao lado, centralizado com a marca.
-    const logoHeight = 56;
+    const logoHeight = 48;
     const logoWidth = (logo.width / logo.height) * logoHeight;
     page.drawImage(logo, {
       x: MARGIN,
@@ -212,28 +207,34 @@ function drawHeader(page: PDFPage, bold: PDFFont, font: PDFFont, logo: PDFImage 
       width: logoWidth,
       height: logoHeight,
     });
-    textX = MARGIN + logoWidth + 16;
-    subtitleY = PAGE_HEIGHT - HEADER_HEIGHT / 2 - 5;
-    page.drawText("Contrato de Proteção Veicular", { x: textX, y: subtitleY, size: 12, font: bold, color: COLOR_PRIMARY_TEXT });
-  } else {
-    page.drawText("FGL BRASIL", { x: textX, y: PAGE_HEIGHT - 34, size: 17, font: bold, color: COLOR_PRIMARY_TEXT });
-    page.drawText("Contrato de Proteção Veicular", {
-      x: textX,
-      y: subtitleY,
-      size: 10,
-      font,
-      color: COLOR_PRIMARY_TEXT_MUTED,
-    });
+    textX = MARGIN + logoWidth + 14;
   }
 
+  page.drawText("FGL Rastreamento", { x: textX, y: PAGE_HEIGHT - 34, size: 15, font: bold, color: COLOR_TEXT });
+  page.drawText("Contrato de Proteção Veicular", {
+    x: textX,
+    y: PAGE_HEIGHT - 50,
+    size: 9.5,
+    font,
+    color: COLOR_MUTED,
+  });
+
   const numero = `Nº ${contractId.slice(0, 8).toUpperCase()}`;
-  const numeroWidth = bold.widthOfTextAtSize(numero, 10);
+  const numeroWidth = font.widthOfTextAtSize(numero, 9.5);
   page.drawText(numero, {
     x: PAGE_WIDTH - MARGIN - numeroWidth,
     y: PAGE_HEIGHT - 34,
-    size: 10,
-    font: bold,
-    color: COLOR_PRIMARY_TEXT,
+    size: 9.5,
+    font,
+    color: COLOR_MUTED,
+  });
+
+  page.drawRectangle({
+    x: 0,
+    y: PAGE_HEIGHT - HEADER_HEIGHT,
+    width: PAGE_WIDTH,
+    height: 2,
+    color: COLOR_ORANGE,
   });
 }
 

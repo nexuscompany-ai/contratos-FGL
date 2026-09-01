@@ -1,6 +1,7 @@
 <%- include("partials/head", { title }) %>
 <%- include("partials/topbar", { userName }) %>
 <div class="container">
+  <a class="back-link" href="/clientes">← Voltar</a>
   <h1><%= client.nomeCompleto %></h1>
 
   <div class="card">
@@ -31,8 +32,6 @@
       </tbody>
     </table>
   </div>
-
-  <a href="/clientes">← Voltar a clientes</a>
 </div>
 </body>
 </html>

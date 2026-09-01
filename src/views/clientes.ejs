@@ -1,17 +1,22 @@
 <%- include("partials/head", { title }) %>
 <%- include("partials/topbar", { userName }) %>
 <div class="container">
+  <a class="back-link" href="/">← Voltar</a>
   <h1>Clientes</h1>
   <div class="card">
     <form method="get" action="/clientes">
-      <input type="text" name="q" placeholder="Digite nome, CPF ou placa..." value="<%= q %>" />
+      <input type="text" name="q" placeholder="Pesquisar cliente..." value="<%= q %>" />
     </form>
   </div>
 
   <div class="card">
     <% if (clientes.length === 0) { %>
-      <p class="muted">Nenhum cliente encontrado.</p>
+      <div class="empty-state">
+        <strong>Nenhum cliente encontrado</strong>
+        Clientes aparecem aqui assim que aceitam um contrato.
+      </div>
     <% } else { %>
+      <div class="table-wrap">
       <table>
         <thead><tr><th>Nome</th><th>CPF</th><th>Contratos</th><th></th></tr></thead>
         <tbody>
@@ -25,9 +30,9 @@
           <% }) %>
         </tbody>
       </table>
+      </div>
     <% } %>
   </div>
-  <a href="/">← Voltar ao dashboard</a>
 </div>
 </body>
 </html>
