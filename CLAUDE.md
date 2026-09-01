@@ -76,9 +76,15 @@ relevante está nela, não na `main`).
   "temporariamente" — foi revertido).
 - `vercel.json` → `buildCommand` roda `prisma generate && prisma migrate
   deploy && (npm run seed || true)` — aplica migrations pendentes e
-  garante o admin automaticamente a cada deploy, sem precisar de acesso
-  manual ao Postgres. Login padrão: `admin@fgl.com.br` / `admin123` (ou
-  os valores de `ADMIN_EMAIL`/`ADMIN_PASSWORD` se configurados na Vercel).
+  garante os logins de equipe automaticamente a cada deploy, sem precisar
+  de acesso manual ao Postgres. `prisma/seed.ts` cria três usuários,
+  idempotente (pula quem já existe): admin (`ADMIN_EMAIL`/`ADMIN_NAME`,
+  padrão `admin@fgl.com.br`), Felipe (`felipe@fgl.com.br`, ou
+  `FELIPE_EMAIL`) e Gabriel (`gabriel@fgl.com.br`, ou `GABRIEL_EMAIL`) —
+  os dois últimos a pedido do dono, pra cada um logar com o próprio nome
+  em vez de dividir o login do admin (aparece em "Aprovado por" no
+  contrato). Todos os três compartilham a mesma senha, `ADMIN_PASSWORD`
+  (padrão `mudar123` se não configurada na Vercel).
 
 ## Coisas que já apareceram como pedido e por quê foram resolvidas assim
 
