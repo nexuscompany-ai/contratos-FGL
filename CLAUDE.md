@@ -28,7 +28,8 @@ relevante está nela, não na `main`).
   mais fixo em R$18.000). Salvos no Vercel Blob se `BLOB_READ_WRITE_TOKEN`
   existir, senão caem para disco local (`src/services/blob.ts`).
 - **Identidade visual**: redesign completo feito (commit `0cdbd33`) —
-  laranja `#eb692d` (extraído da logo oficial) + branco + preto, fonte
+  laranja `#fd6100` (ajustado a pedido do dono, mais forte/quente que o
+  `#eb692d` original) + branco + preto, fonte
   Inter, marca "FGL Rastreamento" em toda a plataforma e no PDF. Logo
   atual em `src/public/logo.jpg` é um placeholder (águia laranja) — o
   dono do projeto disse que ia mandar a logo oficial mas nunca chegou;

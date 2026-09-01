@@ -41,7 +41,7 @@ const PAGE_HEIGHT = 841.89;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const HEADER_HEIGHT = 78;
 
-const COLOR_ORANGE = rgb(0.922, 0.412, 0.176); // #eb692d — laranja FGL
+const COLOR_ORANGE = rgb(0.992, 0.38, 0); // #fd6100 — laranja FGL
 const COLOR_TEXT = rgb(0.09, 0.09, 0.09); // preto
 const COLOR_MUTED = rgb(0.45, 0.45, 0.45);
 const COLOR_CARD_BG = rgb(0.98, 0.98, 0.976);
