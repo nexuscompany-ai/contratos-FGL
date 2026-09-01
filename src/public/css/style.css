@@ -116,6 +116,8 @@ a { color: var(--text); text-decoration: none; }
 .btn.secondary { background: #ffffff; color: var(--text); border: 1px solid var(--border); }
 .btn.secondary:hover { border-color: var(--text); }
 .btn.success { background: var(--orange); }
+.btn.danger { background: #ffffff; color: #991b1b; border: 1px solid #f2c9c9; }
+.btn.danger:hover { background: #fdecec; border-color: #dc2626; }
 .btn.block { display: flex; width: 100%; text-align: center; }
 
 table { width: 100%; border-collapse: collapse; }
@@ -145,6 +147,8 @@ tbody tr:hover { background: #fbfbfb; }
 .badge.VENCIDO::before { background: #a4483a; }
 .badge.PRESTES { color: var(--orange-dark); background: var(--orange-tint); }
 .badge.PRESTES::before { background: var(--orange); }
+.badge.CANCELADO { color: #991b1b; background: #fdecec; }
+.badge.CANCELADO::before { background: #dc2626; }
 
 label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
 input, select, textarea {

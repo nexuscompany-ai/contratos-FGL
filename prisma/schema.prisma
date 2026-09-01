@@ -13,10 +13,11 @@ enum Role {
 }
 
 enum ContractStatus {
-  GERADO   // criado pela FGL, aguardando cliente preencher/aceitar
-  PENDENTE // cliente preencheu e aceitou, aguardando aprovação da FGL
-  ATIVO    // aprovado pela FGL, dentro da vigência
-  VENCIDO  // vigência encerrada
+  GERADO    // criado pela FGL, aguardando cliente preencher/aceitar
+  PENDENTE  // cliente preencheu e aceitou, aguardando aprovação da FGL
+  ATIVO     // aprovado pela FGL, dentro da vigência
+  VENCIDO   // vigência encerrada
+  CANCELADO // cancelado manualmente pela FGL
 }
 
 model User {
@@ -83,6 +84,7 @@ model Contract {
   createdAt   DateTime  @default(now())
   filledAt    DateTime?
   approvedAt  DateTime?
+  cancelledAt DateTime?
 
   createdById  String?
   createdBy    User?   @relation("CriadoPor", fields: [createdById], references: [id])

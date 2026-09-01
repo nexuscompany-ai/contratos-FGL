@@ -7,7 +7,7 @@
   <div class="card">
     <h2>Dados pessoais</h2>
     <table>
-      <tr><th>CPF</th><td><%= client.cpf || "—" %></td></tr>
+      <tr><th>CPF</th><td><%= formatCpf(client.cpf) || "—" %></td></tr>
       <tr><th>Data de nascimento</th><td><%= client.dataNascimento || "—" %></td></tr>
       <tr><th>Telefone</th><td><%= client.telefone || "—" %></td></tr>
       <tr><th>E-mail</th><td><%= client.email || "—" %></td></tr>

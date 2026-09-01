@@ -19,12 +19,20 @@
     <% } else { %>
       <div class="table-wrap">
       <table>
-        <thead><tr><th>Nome</th><th>CPF</th><th>Contratos</th><th></th></tr></thead>
+        <thead><tr><th>Nome</th><th>CPF</th><th>Status</th><th>Contratos</th><th></th></tr></thead>
         <tbody>
           <% clientes.forEach(function(c) { %>
             <tr>
               <td><%= c.nomeCompleto %></td>
-              <td><%= c.cpf || "—" %></td>
+              <td><%= formatCpf(c.cpf) || "—" %></td>
+              <td>
+                <% if (c.contracts.length === 0) { %>
+                  <span class="muted">—</span>
+                <% } else { %>
+                  <span class="badge <%= c.contracts[0].status %>"><%= c.contracts[0].status %></span>
+                  <% if (c.contracts.length > 1) { %> <span class="muted">+<%= c.contracts.length - 1 %></span> <% } %>
+                <% } %>
+              </td>
               <td><%= c.contracts.length %></td>
               <td><a href="/clientes/<%= c.id %>">Ver</a></td>
             </tr>

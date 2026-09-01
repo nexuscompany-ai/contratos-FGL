@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from "pdf
 import fs from "fs";
 import path from "path";
 import { CONTRATADA, PREAMBULO, clausulasComValorFipe, TEXTO_ACEITE } from "./contractTerms";
+import { formatCpf } from "../utils/format";
 
 export interface ContractPdfData {
   contractId: string;
@@ -398,7 +399,7 @@ export async function renderContractPdf(data: ContractPdfData): Promise<Uint8Arr
   if (data.cliente) {
     w.infoCard("CONTRATANTE", [
       { label: "Nome completo", value: data.cliente.nomeCompleto },
-      { label: "CPF", value: data.cliente.cpf || "" },
+      { label: "CPF", value: formatCpf(data.cliente.cpf) },
       { label: "Data de nascimento", value: data.cliente.dataNascimento || "" },
       { label: "Telefone", value: data.cliente.telefone || "" },
       { label: "E-mail", value: data.cliente.email || "" },

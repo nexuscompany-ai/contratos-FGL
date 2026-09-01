@@ -65,7 +65,7 @@ router.post("/contrato/:token", async (req, res) => {
   const client = await prisma.client.create({
     data: {
       nomeCompleto: b.nomeCompleto.trim(),
-      cpf: (b.cpf || "").trim(),
+      cpf: (b.cpf || "").replace(/\D/g, "").trim(),
       dataNascimento: (b.dataNascimento || "").trim() || null,
       telefone: b.telefone.trim(),
       email: b.email.trim(),

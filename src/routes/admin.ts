@@ -98,7 +98,7 @@ function contractSearch(q: string) {
   return {
     OR: [
       { client: { nomeCompleto: { contains: q, mode: "insensitive" as const } } },
-      { client: { cpf: { contains: q } } },
+      { client: { cpf: { contains: q.replace(/\D/g, "") } } },
       { vehicle: { placa: { contains: q.toUpperCase() } } },
     ],
   };
@@ -152,6 +152,16 @@ router.get("/contratos/vencidos", async (req, res) => {
     orderBy: { endDate: "desc" },
   });
   res.render("contrato-lista", { title: "Contratos vencidos", heading: "Contratos vencidos", contratos, diasParaVencer, q });
+});
+
+router.get("/contratos/cancelados", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  const contratos = await prisma.contract.findMany({
+    where: { status: "CANCELADO", ...contractSearch(q) },
+    include: { client: true, vehicle: true },
+    orderBy: { cancelledAt: "desc" },
+  });
+  res.render("contrato-lista", { title: "Contratos cancelados", heading: "Contratos cancelados", contratos, diasParaVencer, q });
 });
 
 router.get("/contratos/:id/pdf", async (req, res) => {
@@ -219,6 +229,21 @@ router.post("/contratos/:id/aprovar", async (req, res) => {
   res.redirect(`/contratos/${contract.id}`);
 });
 
+router.post("/contratos/:id/cancelar", async (req, res) => {
+  const contract = await prisma.contract.findUnique({ where: { id: req.params.id } });
+  if (!contract) return res.status(404).render("404", { title: "Não encontrado" });
+  if (!["GERADO", "PENDENTE", "ATIVO"].includes(contract.status)) {
+    return res.redirect(`/contratos/${contract.id}`);
+  }
+
+  await prisma.contract.update({
+    where: { id: contract.id },
+    data: { status: "CANCELADO", cancelledAt: new Date() },
+  });
+
+  res.redirect(`/contratos/${contract.id}`);
+});
+
 router.get("/clientes", async (req, res) => {
   const q = String(req.query.q || "").trim();
   const clientes = q
@@ -226,15 +251,15 @@ router.get("/clientes", async (req, res) => {
         where: {
           OR: [
             { nomeCompleto: { contains: q, mode: "insensitive" } },
-            { cpf: { contains: q } },
+            { cpf: { contains: q.replace(/\D/g, "") } },
             { contracts: { some: { vehicle: { placa: { contains: q.toUpperCase() } } } } },
           ],
         },
-        include: { contracts: { include: { vehicle: true } } },
+        include: { contracts: { include: { vehicle: true }, orderBy: { createdAt: "desc" } } },
         orderBy: { createdAt: "desc" },
       })
     : await prisma.client.findMany({
-        include: { contracts: { include: { vehicle: true } } },
+        include: { contracts: { include: { vehicle: true }, orderBy: { createdAt: "desc" } } },
         orderBy: { createdAt: "desc" },
         take: 50,
       });

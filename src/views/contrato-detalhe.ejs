@@ -15,7 +15,7 @@
         <tr><th>Veículo</th><td><%= contract.vehicle.placa %> — <%= contract.vehicle.marca || "" %> <%= contract.vehicle.modelo || "" %> <%= contract.vehicle.ano || "" %></td></tr>
       <% } %>
       <% if (contract.client) { %>
-        <tr><th>CPF</th><td><%= contract.client.cpf || "—" %></td></tr>
+        <tr><th>CPF</th><td><%= formatCpf(contract.client.cpf) || "—" %></td></tr>
         <tr><th>Telefone</th><td><%= contract.client.telefone || "—" %></td></tr>
         <tr><th>E-mail</th><td><%= contract.client.email || "—" %></td></tr>
       <% } %>
@@ -29,6 +29,9 @@
       <% if (contract.approvedBy) { %>
         <tr><th>Aprovado por</th><td><%= contract.approvedBy.name %> em <%= new Date(contract.approvedAt).toLocaleString("pt-BR") %></td></tr>
       <% } %>
+      <% if (contract.cancelledAt) { %>
+        <tr><th>Cancelado em</th><td><%= new Date(contract.cancelledAt).toLocaleString("pt-BR") %></td></tr>
+      <% } %>
     </table>
 
     <div class="actions">
@@ -38,6 +41,11 @@
       <% if (contract.status === "PENDENTE") { %>
         <form method="post" action="/contratos/<%= contract.id %>/aprovar" onsubmit="return confirm('Aprovar contrato?\n\nO contrato será finalizado e passará para a categoria de contratos ativos.');">
           <button class="btn success" type="submit">Aprovar contrato</button>
+        </form>
+      <% } %>
+      <% if (["GERADO", "PENDENTE", "ATIVO"].includes(contract.status)) { %>
+        <form method="post" action="/contratos/<%= contract.id %>/cancelar" onsubmit="return confirm('Cancelar este contrato?\n\nEssa ação não pode ser desfeita.');">
+          <button class="btn danger" type="submit">Cancelar contrato</button>
         </form>
       <% } %>
     </div>

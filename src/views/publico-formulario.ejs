@@ -15,7 +15,7 @@
       <input type="text" name="nomeCompleto" required value="<%= old ? old.nomeCompleto : '' %>" />
 
       <label>CPF</label>
-      <input type="text" name="cpf" value="<%= old ? old.cpf : '' %>" />
+      <input type="text" name="cpf" id="cpf" inputmode="numeric" placeholder="000.000.000-00" value="<%= old ? old.cpf : '' %>" />
 
       <label>Data de nascimento</label>
       <input type="date" name="dataNascimento" value="<%= old ? old.dataNascimento : '' %>" />
@@ -68,6 +68,19 @@
     </form>
   </div>
 </div>
+<script>
+  (function () {
+    var inputCpf = document.getElementById("cpf");
+    inputCpf.addEventListener("input", function () {
+      var digits = this.value.replace(/\D/g, "").slice(0, 11);
+      var out = digits.slice(0, 3);
+      if (digits.length > 3) out += "." + digits.slice(3, 6);
+      if (digits.length > 6) out += "." + digits.slice(6, 9);
+      if (digits.length > 9) out += "-" + digits.slice(9, 11);
+      this.value = out;
+    });
+  })();
+</script>
 <%- include("partials/public-footer") %>
 </body>
 </html>
