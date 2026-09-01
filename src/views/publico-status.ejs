@@ -1,7 +1,7 @@
 <%- include("partials/head", { title }) %>
 <div class="container narrow">
   <div class="card" style="margin-top:60px; text-align:center; padding:36px 24px;">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fd6100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fd5f00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
     <span class="badge <%= contract.status %>"><%= contract.status %></span>
     <h1 style="margin-top:12px;">
       <% if (contract.status === "PENDENTE") { %>
@@ -14,7 +14,7 @@
     </h1>
     <p class="muted">
       <% if (contract.status === "PENDENTE") { %>
-        Seu contrato foi enviado para análise da FGL Rastreamento. Você será avisado assim que for aprovado.
+        Seu contrato foi enviado para análise da FGL Contratos. Você será avisado assim que for aprovado.
       <% } else if (contract.status === "ATIVO") { %>
         Vigência de <%= new Date(contract.startDate).toLocaleDateString("pt-BR") %> até <%= new Date(contract.endDate).toLocaleDateString("pt-BR") %>.
       <% } %>

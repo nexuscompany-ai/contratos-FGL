@@ -5,7 +5,7 @@ import { prisma } from "../db";
 const router = Router();
 
 router.get("/login", (req, res) => {
-  if (req.session.userId) return res.redirect("/");
+  if (req.session?.userId) return res.redirect("/");
   res.render("login", { title: "Entrar", error: null });
 });
 
@@ -17,14 +17,15 @@ router.post("/login", async (req, res) => {
     return res.status(401).render("login", { title: "Entrar", error: "E-mail ou senha inválidos." });
   }
 
-  req.session.userId = user.id;
-  req.session.userName = user.name;
-  req.session.userRole = user.role;
+  req.session!.userId = user.id;
+  req.session!.userName = user.name;
+  req.session!.userRole = user.role;
   res.redirect("/");
 });
 
 router.post("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/login"));
+  req.session = null;
+  res.redirect("/login");
 });
 
 export default router;

@@ -41,7 +41,7 @@ const PAGE_HEIGHT = 841.89;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const HEADER_HEIGHT = 78;
 
-const COLOR_ORANGE = rgb(0.992, 0.38, 0); // #fd6100 — laranja FGL
+const COLOR_ORANGE = rgb(0.992, 0.373, 0); // #fd5f00 — laranja FGL
 const COLOR_TEXT = rgb(0.09, 0.09, 0.09); // preto
 const COLOR_MUTED = rgb(0.45, 0.45, 0.45);
 const COLOR_CARD_BG = rgb(0.98, 0.98, 0.976);
@@ -210,7 +210,7 @@ function drawHeader(page: PDFPage, bold: PDFFont, font: PDFFont, logo: PDFImage 
     textX = MARGIN + logoWidth + 14;
   }
 
-  page.drawText("FGL Rastreamento", { x: textX, y: PAGE_HEIGHT - 34, size: 15, font: bold, color: COLOR_TEXT });
+  page.drawText("FGL Contratos", { x: textX, y: PAGE_HEIGHT - 34, size: 15, font: bold, color: COLOR_TEXT });
   page.drawText("Contrato de Proteção Veicular", {
     x: textX,
     y: PAGE_HEIGHT - 50,

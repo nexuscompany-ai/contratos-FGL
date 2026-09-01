@@ -59,7 +59,7 @@ router.post("/contratos/novo", async (req, res) => {
       tipoContrato,
       valorFipe: valorFinal,
       status: "GERADO",
-      createdById: req.session.userId,
+      createdById: req.session?.userId,
     },
   });
 
@@ -186,7 +186,7 @@ router.post("/contratos/:id/aprovar", async (req, res) => {
     data: {
       status: "ATIVO",
       approvedAt: new Date(),
-      approvedById: req.session.userId,
+      approvedById: req.session?.userId,
       startDate,
       endDate,
       pdfPath,

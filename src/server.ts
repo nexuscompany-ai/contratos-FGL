@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import session from "express-session";
+import cookieSession from "cookie-session";
 import path from "path";
 
 import authRoutes from "./routes/auth";
@@ -25,16 +25,15 @@ app.use((req, res, next) => {
 });
 
 app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "dev-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 8 },
+  cookieSession({
+    name: "session",
+    keys: [process.env.SESSION_SECRET || "dev-secret"],
+    maxAge: 1000 * 60 * 60 * 24 * 30,
   })
 );
 
 app.use((req, res, next) => {
-  res.locals.userName = req.session.userName;
+  res.locals.userName = req.session?.userName;
   next();
 });
 

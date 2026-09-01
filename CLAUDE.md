@@ -1,4 +1,4 @@
-# FGL Contratos / FGL Rastreamento — contexto do projeto
+# FGL Contratos — contexto do projeto
 
 Sistema de geração, envio, aceite e aprovação de contratos de rastreamento
 veicular da FGL. Node.js + TypeScript + Express + Prisma + EJS + pdf-lib,
@@ -28,13 +28,21 @@ relevante está nela, não na `main`).
   mais fixo em R$18.000). Salvos no Vercel Blob se `BLOB_READ_WRITE_TOKEN`
   existir, senão caem para disco local (`src/services/blob.ts`).
 - **Identidade visual**: redesign completo feito (commit `0cdbd33`) —
-  laranja `#fd6100` (ajustado a pedido do dono, mais forte/quente que o
-  `#eb692d` original) + branco + preto, fonte
-  Inter, marca "FGL Rastreamento" em toda a plataforma e no PDF. Logo
-  atual em `src/public/logo.jpg` é um placeholder (águia laranja) — o
-  dono do projeto disse que ia mandar a logo oficial mas nunca chegou;
-  trocar o arquivo (e favicon.png/apple-touch-icon.png, regenerados a
-  partir dela) assim que ele mandar.
+  laranja `#fd5f00` (ajustado a pedido do dono, mais forte/quente que o
+  `#eb692d` original — passou por `#fd6100` antes de fechar neste tom) +
+  branco + preto, fonte Inter, marca "FGL Contratos" em toda a plataforma
+  e no PDF (renomeada de "FGL Rastreamento" a pedido do dono). Logo atual
+  em `src/public/logo.jpg` é um placeholder (águia laranja) — o dono do
+  projeto disse que ia mandar a logo oficial mas nunca chegou; trocar o
+  arquivo (e favicon.png/apple-touch-icon.png, regenerados a partir dela)
+  assim que ele mandar.
+- **Sessão de login**: usa `cookie-session` (não `express-session`) —
+  guarda a sessão inteira, assinada, no cookie do navegador em vez de
+  memória do servidor. Isso é obrigatório na Vercel: funções serverless
+  sobem instâncias novas o tempo todo, e um `MemoryStore` em RAM perde a
+  sessão a cada cold start, forçando login repetido e fazendo qualquer
+  link protegido parecer "quebrado" (na real cai no /login). `maxAge` de
+  30 dias. Ver `src/server.ts`.
 - **Regra de UX fixa**: todo botão "← Voltar" fica no TOPO da página,
   nunca no rodapé (`.back-link` no `style.css`).
 - **Endereço do cliente**: removido de propósito do formulário/PDF/telas
