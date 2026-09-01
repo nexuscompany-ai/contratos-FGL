@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "buildCommand": "prisma generate",
+  "buildCommand": "prisma generate && prisma migrate deploy",
   "functions": {
     "api/index.ts": {
       "includeFiles": "{src/views/**,src/public/**,prisma/migrations/**}"
