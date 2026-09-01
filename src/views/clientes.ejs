@@ -4,8 +4,9 @@
   <a class="back-link" href="/">← Voltar</a>
   <h1>Clientes</h1>
   <div class="card">
-    <form method="get" action="/clientes">
-      <input type="text" name="q" placeholder="Pesquisar cliente..." value="<%= q %>" />
+    <form method="get" action="/clientes" class="search-form">
+      <input type="text" name="q" placeholder="Buscar por nome, CPF ou placa..." value="<%= q %>" />
+      <button class="btn secondary" type="submit">Buscar</button>
     </form>
   </div>
 

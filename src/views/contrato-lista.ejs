@@ -3,11 +3,19 @@
 <div class="container">
   <a class="back-link" href="/">← Voltar</a>
   <h1><%= heading %></h1>
+
+  <div class="card">
+    <form method="get" class="search-form">
+      <input type="text" name="q" placeholder="Buscar por nome, CPF ou placa..." value="<%= q %>" />
+      <button class="btn secondary" type="submit">Buscar</button>
+    </form>
+  </div>
+
   <div class="card">
     <% if (contratos.length === 0) { %>
       <div class="empty-state">
-        <strong>Nenhum contrato aqui</strong>
-        Quando houver contratos nesta categoria, eles aparecerão aqui.
+        <strong><%= q ? "Nenhum contrato encontrado" : "Nenhum contrato aqui" %></strong>
+        <%= q ? "Tente buscar por outro nome, CPF ou placa." : "Quando houver contratos nesta categoria, eles aparecerão aqui." %>
       </div>
     <% } else { %>
       <div class="table-wrap">

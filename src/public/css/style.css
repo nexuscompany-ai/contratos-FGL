@@ -25,7 +25,7 @@ a { color: var(--text); text-decoration: none; }
 /* Topo */
 .topbar {
   background: #ffffff;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 3px solid var(--orange);
   padding: 14px 24px;
   display: flex;
   justify-content: space-between;
@@ -73,6 +73,10 @@ a { color: var(--text); text-decoration: none; }
 }
 .stat .num { font-size: 24px; font-weight: 700; color: var(--text); }
 .stat .lbl { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+.search-form { display: flex; gap: 10px; }
+.search-form input { flex: 1; }
+.search-form .btn { flex: none; }
 
 .folders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
 .folder {
@@ -185,6 +189,22 @@ iframe.pdf-preview { width: 100%; height: 480px; border: 1px solid var(--border)
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
 .empty-state strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 6px; }
+
+/* Barras da página pública (formulário do cliente / status do contrato) —
+   faixa laranja sólida no topo e no rodapé com a marca, pedido explícito
+   pra reforçar a identidade visual nas telas voltadas ao cliente. */
+.public-bar {
+  background: var(--orange);
+  color: #ffffff;
+  text-align: center;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+.public-bar.top { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.public-bar.top img { height: 26px; width: auto; display: block; }
+.public-bar.bottom { font-weight: 500; font-size: 12.5px; color: rgba(255, 255, 255, 0.92); }
 
 /* Login */
 .login-wrap {

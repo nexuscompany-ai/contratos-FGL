@@ -89,9 +89,25 @@ router.get("/contratos/:id/link", async (req, res) => {
   });
 });
 
+/**
+ * Filtro de busca por nome do cliente, CPF ou placa do veículo, usado em
+ * todas as pastas de contratos (pendentes/ativos/prestes a vencer/vencidos).
+ */
+function contractSearch(q: string) {
+  if (!q) return {};
+  return {
+    OR: [
+      { client: { nomeCompleto: { contains: q, mode: "insensitive" as const } } },
+      { client: { cpf: { contains: q } } },
+      { vehicle: { placa: { contains: q.toUpperCase() } } },
+    ],
+  };
+}
+
 router.get("/contratos/pendentes", async (req, res) => {
+  const q = String(req.query.q || "").trim();
   const contratos = await prisma.contract.findMany({
-    where: { status: "PENDENTE" },
+    where: { status: "PENDENTE", ...contractSearch(q) },
     include: { client: true, vehicle: true },
     orderBy: { filledAt: "desc" },
   });
@@ -100,38 +116,42 @@ router.get("/contratos/pendentes", async (req, res) => {
     heading: "Pendentes de aprovação",
     contratos,
     diasParaVencer,
+    q,
   });
 });
 
 router.get("/contratos/ativos", async (req, res) => {
   await sweepContratosVencidos();
+  const q = String(req.query.q || "").trim();
   const contratos = await prisma.contract.findMany({
-    where: { status: "ATIVO" },
+    where: { status: "ATIVO", ...contractSearch(q) },
     include: { client: true, vehicle: true },
     orderBy: { endDate: "asc" },
   });
-  res.render("contrato-lista", { title: "Contratos ativos", heading: "Contratos ativos", contratos, diasParaVencer });
+  res.render("contrato-lista", { title: "Contratos ativos", heading: "Contratos ativos", contratos, diasParaVencer, q });
 });
 
 router.get("/contratos/prestes-a-vencer", async (req, res) => {
   await sweepContratosVencidos();
+  const q = String(req.query.q || "").trim();
   const ativos = await prisma.contract.findMany({
-    where: { status: "ATIVO" },
+    where: { status: "ATIVO", ...contractSearch(q) },
     include: { client: true, vehicle: true },
     orderBy: { endDate: "asc" },
   });
   const contratos = ativos.filter((c) => estaPrestesAVencer(c.endDate, "ATIVO"));
-  res.render("contrato-lista", { title: "Prestes a vencer", heading: "Prestes a vencer (≤ 30 dias)", contratos, diasParaVencer });
+  res.render("contrato-lista", { title: "Prestes a vencer", heading: "Prestes a vencer (≤ 30 dias)", contratos, diasParaVencer, q });
 });
 
 router.get("/contratos/vencidos", async (req, res) => {
   await sweepContratosVencidos();
+  const q = String(req.query.q || "").trim();
   const contratos = await prisma.contract.findMany({
-    where: { status: "VENCIDO" },
+    where: { status: "VENCIDO", ...contractSearch(q) },
     include: { client: true, vehicle: true },
     orderBy: { endDate: "desc" },
   });
-  res.render("contrato-lista", { title: "Contratos vencidos", heading: "Contratos vencidos", contratos, diasParaVencer });
+  res.render("contrato-lista", { title: "Contratos vencidos", heading: "Contratos vencidos", contratos, diasParaVencer, q });
 });
 
 router.get("/contratos/:id/pdf", async (req, res) => {
@@ -205,7 +225,7 @@ router.get("/clientes", async (req, res) => {
     ? await prisma.client.findMany({
         where: {
           OR: [
-            { nomeCompleto: { contains: q } },
+            { nomeCompleto: { contains: q, mode: "insensitive" } },
             { cpf: { contains: q } },
             { contracts: { some: { vehicle: { placa: { contains: q.toUpperCase() } } } } },
           ],

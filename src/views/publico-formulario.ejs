@@ -1,10 +1,6 @@
 <%- include("partials/head", { title }) %>
+<%- include("partials/public-topbar") %>
 <div class="container narrow">
-  <div style="text-align:center; margin-bottom:24px;">
-    <img src="/logo.jpg" alt="FGL Contratos" style="height:48px; width:auto; margin-bottom:10px;" />
-    <div style="font-weight:700; font-size:16px;">FGL Contratos</div>
-  </div>
-
   <h1>Contrato de Rastreamento</h1>
   <p class="subtitle">Preencha seus dados para finalizar a contratação. Tipo: <%= contract.tipoContrato %> · Valor FIPE: <%= contract.valorFipe.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) %></p>
 
@@ -72,5 +68,6 @@
     </form>
   </div>
 </div>
+<%- include("partials/public-footer") %>
 </body>
 </html>
