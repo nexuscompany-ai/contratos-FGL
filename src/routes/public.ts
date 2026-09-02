@@ -3,6 +3,7 @@ import { prisma } from "../db";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { clausulasComValorFipe, PREAMBULO, TEXTO_ACEITE, CONTRATADA } from "../services/contractTerms";
+import { isValidCpf } from "../utils/format";
 
 const router = Router();
 
@@ -46,14 +47,18 @@ router.post("/contrato/:token", async (req, res) => {
   const required = ["nomeCompleto", "telefone", "email", "placa", "modelo", "ano"];
   const missing = required.filter((f) => !String(b[f] || "").trim());
   const aceite = b.aceite === "on";
+  const cpfDigits = (b.cpf || "").replace(/\D/g, "");
+  const cpfInvalido = cpfDigits.length > 0 && !isValidCpf(cpfDigits);
 
-  if (missing.length > 0 || !aceite) {
+  if (missing.length > 0 || !aceite || cpfInvalido) {
+    let error = "Preencha todos os campos obrigatórios.";
+    if (cpfInvalido) error = "CPF inválido. Confira os números digitados.";
+    if (!aceite) error = "É necessário aceitar os termos do contrato para continuar.";
+
     return res.status(400).render("publico-formulario", {
       title: "Contrato FGL",
       contract,
-      error: !aceite
-        ? "É necessário aceitar os termos do contrato para continuar."
-        : "Preencha todos os campos obrigatórios.",
+      error,
       old: b,
       clausulas: clausulasComValorFipe(contract.valorFipe),
       preambulo: PREAMBULO,
@@ -65,7 +70,7 @@ router.post("/contrato/:token", async (req, res) => {
   const client = await prisma.client.create({
     data: {
       nomeCompleto: b.nomeCompleto.trim(),
-      cpf: (b.cpf || "").replace(/\D/g, "").trim(),
+      cpf: cpfDigits,
       dataNascimento: (b.dataNascimento || "").trim() || null,
       telefone: b.telefone.trim(),
       email: b.email.trim(),
