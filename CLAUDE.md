@@ -72,6 +72,39 @@ relevante está nela, não na `main`).
   (decisão explícita do dono do produto — "não precisa colocar o
   endereço"). Não reintroduzir sem confirmar com ele, mesmo que outro
   brief peça o contrário.
+- **Notificações Push** (commit `cb69585`): Web Push nativo (VAPID, sem
+  Firebase/OneSignal/Pusher) disparado quando o cliente aceita o contrato
+  (status vira PENDENTE) — vai pra todos os usuários da equipe. Serviço
+  em `src/services/push.ts` (envio + desativação automática de assinatura
+  morta em 404/410) e `src/services/notifications.ts`
+  (`notifyNovoContratoPendente`, chamado em `src/routes/public.ts` logo
+  após o `contract.update` pra PENDENTE; idempotente via
+  `Contract.pushNotifiedAt`, nunca duplica). Rotas isoladas em
+  `src/routes/push.ts` (tudo sob `requireAuth`, prefixo `/api/push/*` e
+  `/api/notifications/*`). Tabelas novas: `PushSubscription` (1 linha por
+  dispositivo/endpoint, nunca sobrescreve outro dispositivo do mesmo
+  usuário), `Notification` (central do sino no topbar), `PushLog`
+  (auditoria de cada envio). **Exige duas env vars na Vercel que eu não
+  consigo configurar sozinho** (sem tool de env var) — `VAPID_PUBLIC_KEY`
+  e `VAPID_PRIVATE_KEY` (par estável, gerado uma única vez com `npx
+  web-push generate-vapid-keys`; nunca regerar, senão as inscrições já
+  ativas quebram) e opcionalmente `VAPID_SUBJECT`. Sem elas configuradas,
+  o botão "Ativar notificações" funciona mas nada é enviado (falha
+  tratada, resto do sistema intacto). Ver `.env.example`.
+  - **iPhone**: Web Push só funciona depois de "Adicionar à Tela de
+    Início" no Safari (aba normal não recebe push) — fluxo próprio
+    detectado em `src/public/js/push.js` (`precisaInstalarNoIphone`),
+    com instruções em `src/views/configuracoes.ejs` (`Configurações →
+    Notificações`, acessível pelo link no topbar).
+  - **PWA**: `src/public/manifest.webmanifest` + `src/public/sw.js`
+    (service worker — push + abre `/contratos/:id` no clique) + ícones
+    `icon-192.png`/`icon-512.png` gerados do `logo.jpg` placeholder atual
+    (trocar junto quando a logo oficial chegar).
+  - **Badge "Contratos Pendentes"** no dashboard e sino de notificações no
+    topbar fazem polling leve (25s, só com aba visível) via
+    `src/public/js/notif-center.js` — não é tempo real de verdade (Vercel
+    serverless não sustenta WebSocket/SSE de longa duração), é
+    complementar ao Push, que é o disparo imediato de verdade.
 
 ## Infra na Vercel — cuidado, tem pegadinha
 
