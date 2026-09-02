@@ -55,6 +55,33 @@ router.get("/admin/testar-emails", async (req, res) => {
   res.send(`4 e-mails de teste disparados para ${to}. Confira o console de logs (Vercel → Runtime Logs) se algum não chegar.`);
 });
 
+/**
+ * Apaga clientes, veículos e contratos de teste (aceites junto, por causa
+ * da constraint) pra começar com dados reais. Usuários (logins) não são
+ * tocados. Ação única e destrutiva — exige ?confirmar=SIM pra rodar, e é
+ * feita sob login (requireAuth já aplicado no router).
+ */
+router.get("/admin/resetar-dados-teste", async (req, res) => {
+  if (req.query.confirmar !== "SIM") {
+    return res
+      .status(400)
+      .send(
+        "Isso apaga TODOS os clientes, veículos, contratos e aceites do banco (não mexe nos logins). " +
+          "Se tem certeza, acesse /admin/resetar-dados-teste?confirmar=SIM"
+      );
+  }
+
+  const aceites = await prisma.acceptance.deleteMany({});
+  const contratos = await prisma.contract.deleteMany({});
+  const clientes = await prisma.client.deleteMany({});
+  const veiculos = await prisma.vehicle.deleteMany({});
+
+  res.send(
+    `Dados de teste apagados: ${contratos.count} contrato(s), ${clientes.count} cliente(s), ` +
+      `${veiculos.count} veículo(s), ${aceites.count} aceite(s). Os logins não foram alterados.`
+  );
+});
+
 router.get("/contratos/novo", (req, res) => {
   res.render("contrato-novo", { title: "Enviar contrato" });
 });
