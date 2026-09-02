@@ -30,6 +30,8 @@ model User {
 
   contratosCriados   Contract[] @relation("CriadoPor")
   contratosAprovados Contract[] @relation("AprovadoPor")
+  pushSubscriptions  PushSubscription[]
+  notifications      Notification[]
 }
 
 model Client {
@@ -97,6 +99,9 @@ model Contract {
 
   acceptance Acceptance?
   emailLogs  EmailLog[]
+  notifications Notification[]
+
+  pushNotifiedAt DateTime? // marca o disparo do push de "novo contrato pendente" — garante 1x por contrato
 
   @@index([status])
 }
@@ -127,4 +132,60 @@ model EmailLog {
   createdAt    DateTime  @default(now())
 
   @@index([contractId])
+}
+
+/// Um dispositivo (navegador/PWA) inscrito para receber Web Push. Um mesmo
+/// usuário pode ter várias (iPhone, computador etc.) — nunca sobrescreve,
+/// só desativa quando o endpoint para de responder (410/404).
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  label      String?   // ex.: "iPhone", "Chrome no computador" — derivado do user-agent
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime  @default(now())
+
+  logs PushLog[]
+
+  @@index([userId])
+}
+
+/// Item da central de notificações do CRM (sino no topo). Hoje só o evento
+/// "novo contrato pendente"; type deixa aberto pra outros eventos futuros
+/// sem precisar de migration nova.
+model Notification {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  type       String    // NOVO_CONTRATO_PENDENTE
+  title      String
+  body       String
+  contractId String?
+  contract   Contract? @relation(fields: [contractId], references: [id])
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([contractId])
+}
+
+/// Log de cada tentativa de envio de Web Push — pra diagnosticar "por que
+/// o Felipe não recebeu a notificação" sem expor nada sensível.
+model PushLog {
+  id             String            @id @default(cuid())
+  subscriptionId String?
+  subscription   PushSubscription? @relation(fields: [subscriptionId], references: [id])
+  userId         String?
+  contractId     String?
+  event          String            // NOVO_CONTRATO_PENDENTE | TESTE
+  status         String            // ENVIADO | ERRO | REMOVIDO_INVALIDO
+  erro           String?
+  createdAt      DateTime          @default(now())
+
+  @@index([subscriptionId])
 }

@@ -203,6 +203,11 @@ function contractSearch(q: string) {
   };
 }
 
+router.get("/api/contratos/pendentes/count", async (req, res) => {
+  const count = await prisma.contract.count({ where: { status: "PENDENTE" } });
+  res.json({ count });
+});
+
 router.get("/contratos/pendentes", async (req, res) => {
   const q = String(req.query.q || "").trim();
   const contratos = await prisma.contract.findMany({
@@ -402,6 +407,10 @@ router.post("/contratos/:id/cancelar", async (req, res) => {
   }
 
   res.redirect(`/contratos/${contract.id}`);
+});
+
+router.get("/configuracoes", (req, res) => {
+  res.render("configuracoes", { title: "Configurações" });
 });
 
 router.get("/clientes", async (req, res) => {

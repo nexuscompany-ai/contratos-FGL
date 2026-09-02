@@ -9,6 +9,7 @@ import path from "path";
 import authRoutes from "./routes/auth";
 import adminRoutes from "./routes/admin";
 import publicRoutes from "./routes/public";
+import pushRoutes from "./routes/push";
 import { ensureDatabaseReady } from "./db-bootstrap";
 import { formatCpf } from "./utils/format";
 import { sweepContratosVencidos } from "./services/contractLifecycle";
@@ -20,6 +21,7 @@ app.set("views", path.join(process.cwd(), "src", "views"));
 app.locals.formatCpf = formatCpf;
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static(path.join(process.cwd(), "src", "public")));
 
 const dbReady = ensureDatabaseReady();
@@ -59,6 +61,7 @@ app.get("/api/cron/lembretes", async (req, res) => {
 
 app.use("/", publicRoutes);
 app.use("/", authRoutes);
+app.use("/", pushRoutes);
 app.use("/", adminRoutes);
 
 app.use((req, res) => {

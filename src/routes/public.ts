@@ -4,6 +4,7 @@ import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { clausulasComValorFipe, PREAMBULO, TEXTO_ACEITE, CONTRATADA } from "../services/contractTerms";
 import { isValidCpf } from "../utils/format";
+import { notifyNovoContratoPendente } from "../services/notifications";
 
 const router = Router();
 
@@ -99,6 +100,16 @@ router.post("/contrato/:token", async (req, res) => {
     where: { id: contract.id },
     data: { clientId: client.id, vehicleId: vehicle.id, status: "PENDENTE", filledAt: new Date() },
   });
+
+  // Aceite já confirmado e persistido (status PENDENTE gravado acima) —
+  // agora sim disparamos a notificação Push aos gestores. Aguardamos aqui
+  // porque a função serverless pode ser congelada assim que a resposta for
+  // enviada; nunca deixamos isso quebrar a resposta ao cliente.
+  try {
+    await notifyNovoContratoPendente(updated.id, client.nomeCompleto);
+  } catch (err) {
+    console.error("Falha ao notificar novo contrato pendente:", err);
+  }
 
   const acceptance = await prisma.acceptance.findUnique({ where: { contractId: contract.id } });
   const pdfBytes = await renderContractPdf({

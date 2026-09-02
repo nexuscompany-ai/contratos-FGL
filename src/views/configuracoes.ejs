@@ -1,0 +1,152 @@
+<%- include("partials/head", { title }) %>
+<%- include("partials/topbar", { userName }) %>
+<div class="container narrow">
+  <a class="back-link" href="/">← Voltar</a>
+  <h1>Configurações</h1>
+  <p class="subtitle">Notificações</p>
+
+  <div class="card">
+    <h2>Novos contratos</h2>
+    <p class="muted" style="margin:-8px 0 16px;">Receba uma notificação quando um cliente assinar um contrato.</p>
+
+    <div data-estado="nao-configurado" hidden>
+      <p style="margin:0 0 14px;">Ative as notificações neste dispositivo.</p>
+      <button class="btn" id="btnAtivar" type="button">Ativar notificações</button>
+    </div>
+
+    <div data-estado="ativo" hidden>
+      <p style="margin:0 0 14px; font-weight:600;">🟢 Notificações ativadas</p>
+      <p class="muted" style="margin:-10px 0 14px;">Este dispositivo está configurado para receber notificações.</p>
+      <div class="actions" style="margin-top:0;">
+        <button class="btn secondary" id="btnTeste" type="button">Enviar notificação de teste</button>
+        <button class="btn danger" id="btnDesativar" type="button">Desativar neste dispositivo</button>
+      </div>
+    </div>
+
+    <div data-estado="bloqueado" hidden>
+      <p style="margin:0 0 8px; font-weight:600;">⚠️ Notificações bloqueadas pelo navegador</p>
+      <p class="muted" style="margin:0;">
+        As notificações foram bloqueadas para este site. Acesse as configurações do navegador
+        (ícone de cadeado ao lado do endereço, ou Ajustes → Notificações) e permita notificações
+        para o FGL Contratos.
+      </p>
+    </div>
+
+    <div data-estado="precisa-instalar-ios" hidden>
+      <p style="margin:0 0 10px; font-weight:600;">Ative as notificações no seu iPhone</p>
+      <p class="muted" style="margin:0 0 10px;">Para receber avisos mesmo quando o sistema não estiver aberto:</p>
+      <ol style="margin:0 0 4px; padding-left:20px; font-size:14px; color:var(--text);">
+        <li style="margin-bottom:6px;">Toque em <strong>Compartilhar</strong> no Safari.</li>
+        <li style="margin-bottom:6px;">Selecione <strong>Adicionar à Tela de Início</strong>.</li>
+        <li style="margin-bottom:6px;">Abra o FGL Contratos pela Tela de Início.</li>
+        <li style="margin-bottom:6px;">Acesse novamente Configurações → Notificações.</li>
+        <li style="margin-bottom:6px;">Toque em <strong>Ativar notificações</strong>.</li>
+        <li>Toque em <strong>Permitir</strong>.</li>
+      </ol>
+    </div>
+
+    <div data-estado="incompativel" hidden>
+      <p style="margin:0 0 8px; font-weight:600;">Este navegador não suporta notificações Push neste ambiente.</p>
+      <p class="muted" style="margin:0;">
+        No iPhone, use o Safari e adicione o FGL Contratos à Tela de Início. No computador,
+        prefira Chrome, Edge ou Firefox atualizados.
+      </p>
+    </div>
+
+    <div id="notifMensagem" class="flash success" style="display:none; margin-top:16px;"></div>
+  </div>
+
+  <div class="card" id="cardDispositivos" hidden>
+    <h2>Meus dispositivos</h2>
+    <div id="listaDispositivos"></div>
+  </div>
+</div>
+<script src="/js/push.js"></script>
+<script>
+  (function () {
+    var estados = document.querySelectorAll("[data-estado]");
+    var msg = document.getElementById("notifMensagem");
+    var cardDispositivos = document.getElementById("cardDispositivos");
+    var listaDispositivos = document.getElementById("listaDispositivos");
+
+    function mostrarEstado(nome) {
+      estados.forEach(function (el) {
+        el.hidden = el.getAttribute("data-estado") !== nome;
+      });
+      cardDispositivos.hidden = nome !== "ativo";
+    }
+
+    function mostrarMensagem(texto) {
+      msg.textContent = texto;
+      msg.style.display = "block";
+      setTimeout(function () { msg.style.display = "none"; }, 4000);
+    }
+
+    async function carregarDispositivos() {
+      try {
+        var res = await fetch("/api/push/devices");
+        var data = await res.json();
+        if (!data.devices || data.devices.length === 0) {
+          listaDispositivos.innerHTML = '<p class="muted">Nenhum dispositivo ativo.</p>';
+          return;
+        }
+        listaDispositivos.innerHTML = data.devices
+          .map(function (d) {
+            return (
+              '<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">' +
+              '<div><strong style="font-size:14px;">' + d.label + "</strong><div class=\"muted\" style=\"font-size:12px;\">Notificações ativadas.</div></div>" +
+              '<button class="btn secondary" data-device-id="' + d.id + '" style="padding:6px 12px; font-size:13px;">Desativar</button>' +
+              "</div>"
+            );
+          })
+          .join("");
+
+        listaDispositivos.querySelectorAll("[data-device-id]").forEach(function (btn) {
+          btn.addEventListener("click", async function () {
+            await fetch("/api/push/devices/" + btn.getAttribute("data-device-id") + "/desativar", { method: "POST" });
+            carregarDispositivos();
+          });
+        });
+      } catch (e) {
+        listaDispositivos.innerHTML = '<p class="muted">Não foi possível carregar os dispositivos agora.</p>';
+      }
+    }
+
+    async function atualizar() {
+      var estado = await window.FGLPush.getEstado();
+      mostrarEstado(estado);
+      if (estado === "ativo") carregarDispositivos();
+    }
+
+    document.getElementById("btnAtivar").addEventListener("click", async function () {
+      try {
+        await window.FGLPush.ativar();
+        mostrarMensagem("Notificações ativadas neste dispositivo.");
+        atualizar();
+      } catch (err) {
+        if (err.message === "permissao-negada") {
+          mostrarEstado("bloqueado");
+        } else if (err.message === "servidor-nao-configurado") {
+          mostrarMensagem("O servidor ainda não está configurado para enviar notificações. Fale com o time técnico.");
+        } else {
+          mostrarMensagem("Não foi possível ativar as notificações agora.");
+        }
+      }
+    });
+
+    document.getElementById("btnDesativar").addEventListener("click", async function () {
+      await window.FGLPush.desativarNesteDispositivo();
+      mostrarMensagem("Notificações desativadas neste dispositivo.");
+      atualizar();
+    });
+
+    document.getElementById("btnTeste").addEventListener("click", async function () {
+      var resultado = await window.FGLPush.enviarTeste();
+      mostrarMensagem(resultado.ok ? "Notificação de teste enviada." : "Não foi possível enviar o teste agora.");
+    });
+
+    atualizar();
+  })();
+</script>
+</body>
+</html>

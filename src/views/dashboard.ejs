@@ -4,6 +4,19 @@
   <h1>Contratos</h1>
   <p class="subtitle">Visão geral da operação</p>
 
+  <div class="card" id="avisoAtivarPush" hidden>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div>
+        <strong style="font-size:14px;">Ative as notificações</strong>
+        <p class="muted" style="margin:2px 0 0;">Receba um aviso no celular quando um cliente assinar um novo contrato.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a class="btn" href="/configuracoes">Ativar notificações</a>
+        <button class="btn secondary" id="dispensarAvisoPush" type="button">Agora não</button>
+      </div>
+    </div>
+  </div>
+
   <div class="stats">
     <div class="stat"><div class="num"><%= stats.ativos %></div><div class="lbl">Contratos ativos</div></div>
     <div class="stat"><div class="num"><%= stats.pendentes %></div><div class="lbl">Pendentes de aprovação</div></div>
@@ -14,7 +27,7 @@
   <div class="folders">
     <a class="folder" href="/clientes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Clientes</a>
     <a class="folder" href="/contratos/ativos"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Ativos</a>
-    <a class="folder" href="/contratos/pendentes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Pendentes</a>
+    <a class="folder" href="/contratos/pendentes"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Pendentes<span class="folder-badge" data-pendentes-badge <%= stats.pendentes === 0 ? "hidden" : "" %>><%= stats.pendentes %></span></a>
     <a class="folder" href="/contratos/prestes-a-vencer"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Prestes a Vencer</a>
     <a class="folder" href="/contratos/vencidos"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Vencidos</a>
     <a class="folder" href="/contratos/cancelados"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Contratos Cancelados</a>
@@ -22,5 +35,29 @@
 
   <a class="btn block" href="/contratos/novo">+ Novo contrato</a>
 </div>
+<script src="/js/push.js"></script>
+<script>
+  (function () {
+    var aviso = document.getElementById("avisoAtivarPush");
+    var dispensar = document.getElementById("dispensarAvisoPush");
+    var CHAVE = "fgl_aviso_push_dispensado";
+
+    dispensar.addEventListener("click", function () {
+      try { localStorage.setItem(CHAVE, "1"); } catch (e) {}
+      aviso.hidden = true;
+    });
+
+    (async function () {
+      var jaDispensado = false;
+      try { jaDispensado = localStorage.getItem(CHAVE) === "1"; } catch (e) {}
+      if (jaDispensado || !window.FGLPush) return;
+
+      var estado = await window.FGLPush.getEstado();
+      if (estado === "nao-configurado" || estado === "precisa-instalar-ios") {
+        aviso.hidden = false;
+      }
+    })();
+  })();
+</script>
 </body>
 </html>
