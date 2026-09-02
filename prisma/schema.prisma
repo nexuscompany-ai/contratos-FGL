@@ -96,6 +96,7 @@ model Contract {
   approvedBy   User?   @relation("AprovadoPor", fields: [approvedById], references: [id])
 
   acceptance Acceptance?
+  emailLogs  EmailLog[]
 
   @@index([status])
 }
@@ -108,4 +109,22 @@ model Acceptance {
   ip         String?
   userAgent  String?
   version    String   @default("1")
+}
+
+/// Registro de cada tentativa de envio de e-mail transacional (aprovação,
+/// lembretes, cancelamento, reenvio) — pra auditoria e pra evitar disparo
+/// duplicado silencioso.
+model EmailLog {
+  id           String    @id @default(cuid())
+  contractId   String?
+  contract     Contract? @relation(fields: [contractId], references: [id])
+  tipo         String    // BOAS_VINDAS | REENVIO | LEMBRETE_30 | VENCIMENTO | CANCELAMENTO
+  destinatario String
+  clienteNome  String?
+  status       String    // ENVIADO | ERRO | PULADO
+  erro         String?
+  messageId    String?
+  createdAt    DateTime  @default(now())
+
+  @@index([contractId])
 }

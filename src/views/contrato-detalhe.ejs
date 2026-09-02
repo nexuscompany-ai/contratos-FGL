@@ -4,6 +4,14 @@
   <a class="back-link" href="javascript:history.back()">← Voltar</a>
   <h1><%= contract.client ? contract.client.nomeCompleto : "Contrato #" + contract.id.slice(0,8).toUpperCase() %></h1>
 
+  <% if (emailStatus === "enviado") { %>
+    <div class="flash success">Contrato finalizado com sucesso. Envio realizado para <%= contract.client ? contract.client.email : "o cliente" %>.</div>
+  <% } else if (emailStatus === "erro") { %>
+    <div class="flash">O contrato foi processado, mas o envio do e-mail falhou. Veja o histórico de e-mails abaixo ou use "Reenviar contrato".</div>
+  <% } else if (emailStatus === "sememail") { %>
+    <div class="flash">Contrato processado, mas o cliente não tem e-mail cadastrado — nenhum e-mail foi enviado.</div>
+  <% } %>
+
   <div class="card">
     <span class="badge <%= contract.status %>"><%= contract.status %></span>
     <% if (prestesAVencer) { %> <span class="badge PRESTES">PRESTES A VENCER</span> <% } %>
@@ -43,6 +51,11 @@
           <button class="btn success" type="submit">Aprovar contrato</button>
         </form>
       <% } %>
+      <% if (contract.pdfPath && contract.client && contract.client.email) { %>
+        <form method="post" action="/contratos/<%= contract.id %>/reenviar" onsubmit="return confirm('Reenviar o contrato por e-mail para ' + '<%= contract.client.email %>' + '?');">
+          <button class="btn secondary" type="submit">Reenviar contrato</button>
+        </form>
+      <% } %>
       <% if (["GERADO", "PENDENTE", "ATIVO"].includes(contract.status)) { %>
         <form method="post" action="/contratos/<%= contract.id %>/cancelar" onsubmit="return confirm('Cancelar este contrato?\n\nEssa ação não pode ser desfeita.');">
           <button class="btn danger" type="submit">Cancelar contrato</button>
@@ -50,6 +63,35 @@
       <% } %>
     </div>
   </div>
+
+  <% if (contract.emailLogs && contract.emailLogs.length > 0) { %>
+    <div class="card">
+      <h2>Histórico de e-mails</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Destinatário</th><th>Data</th><th>Status</th></tr></thead>
+          <tbody>
+            <% contract.emailLogs.forEach(function(log) { %>
+              <tr>
+                <td><%= ({BOAS_VINDAS: "Contrato finalizado", REENVIO: "Reenvio", LEMBRETE_30: "Lembrete 30 dias", VENCIMENTO: "Lembrete de vencimento", CANCELAMENTO: "Cancelamento"})[log.tipo] || log.tipo %></td>
+                <td><%= log.destinatario %></td>
+                <td><%= new Date(log.createdAt).toLocaleString("pt-BR") %></td>
+                <td>
+                  <% if (log.status === "ENVIADO") { %>
+                    <span class="badge ATIVO">ENVIADO</span>
+                  <% } else if (log.status === "ERRO") { %>
+                    <span class="badge VENCIDO" title="<%= log.erro || '' %>">ERRO</span>
+                  <% } else { %>
+                    <span class="badge">PULADO</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
 </div>
 </body>
 </html>

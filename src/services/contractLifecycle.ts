@@ -30,6 +30,7 @@ export async function sweepContratosVencidos() {
   for (const c of prestesA30Dias) {
     if (!c.client?.email || !c.endDate) continue;
     await sendLembrete30Email({
+      contractId: c.id,
       clienteNome: c.client.nomeCompleto,
       clienteEmail: c.client.email,
       tipoContrato: c.tipoContrato,
@@ -47,6 +48,7 @@ export async function sweepContratosVencidos() {
   for (const c of vencendoHoje) {
     if (c.client?.email && c.endDate) {
       await sendVencimentoEmail({
+        contractId: c.id,
         clienteNome: c.client.nomeCompleto,
         clienteEmail: c.client.email,
         tipoContrato: c.tipoContrato,

@@ -46,15 +46,26 @@ relevante está nela, não na `main`).
 - **E-mails automáticos**: `src/services/email.ts` (Gmail via nodemailer,
   conta `fglcontratos@gmail.com` com senha de app — variáveis `GMAIL_USER`/
   `GMAIL_APP_PASSWORD` na Vercel; sem elas, só loga no console em vez de
-  enviar). Três disparos: boas-vindas ao aprovar (pede pra guardar o PDF),
-  lembrete 30 dias antes do vencimento, lembrete no dia do vencimento —
-  os dois últimos sempre puxando pra renovação. Cada um só sai uma vez por
-  contrato (`boasVindasEmailSentAt`/`lembrete30EmailSentAt`/
-  `vencimentoEmailSentAt` no Contract). Sem cron real de verdade além do
-  `vercel.json` → `GET /api/cron/lembretes` 1x/dia (protegido por
+  enviar). SMTP explícito (`smtp.gmail.com:465`, TLS implícito), `From`
+  sempre `"FGL Contratos" <GMAIL_USER>`, `Reply-To` = `GMAIL_USER` (ou
+  `EMAIL_REPLY_TO` se setado). Todo envio é multipart HTML+texto, com
+  retry controlado (até 3 tentativas, só pra erro temporário — erro
+  permanente 5xx não retenta) e logado em `EmailLog` (histórico visível na
+  tela do contrato). Quatro disparos: contrato finalizado ao aprovar
+  (PDF anexado de verdade, nome de arquivo `Contrato_FGL_Contratos_
+  [Nome].pdf`), lembrete 30 dias antes do vencimento, lembrete no dia do
+  vencimento, cancelamento — os dois lembretes sempre puxando pra
+  renovação. Cada um só sai uma vez por contrato automaticamente
+  (`boasVindasEmailSentAt`/`lembrete30EmailSentAt`/`vencimentoEmailSentAt`
+  no Contract) — reenvio manual do contrato finalizado é uma ação separada
+  ("Reenviar contrato" na tela do contrato, POST
+  `/contratos/:id/reenviar`), também logada. Sem cron real de verdade além
+  do `vercel.json` → `GET /api/cron/lembretes` 1x/dia (protegido por
   `CRON_SECRET`, opcional mas recomendado) — `sweepContratosVencidos()`
   também roda "de carona" toda vez que alguém abre uma lista de contratos
   no painel, então na prática os lembretes saem mesmo se o cron falhar.
+  Diagnóstico manual: `GET /admin/testar-emails?to=email` (autenticado)
+  dispara os 4 templates com um PDF real gerado na hora.
 - **Regra de UX fixa**: todo botão "← Voltar" fica no TOPO da página,
   nunca no rodapé (`.back-link` no `style.css`).
 - **Endereço do cliente**: removido de propósito do formulário/PDF/telas

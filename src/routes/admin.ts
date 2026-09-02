@@ -5,7 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { sweepContratosVencidos, estaPrestesAVencer, diasParaVencer, DIAS_VIGENCIA } from "../services/contractLifecycle";
-import { sendBoasVindasEmail, sendCancelamentoEmail, sendLembrete30Email, sendVencimentoEmail } from "../services/email";
+import { sendContratoFinalizadoEmail, sendCancelamentoEmail, sendLembrete30Email, sendVencimentoEmail } from "../services/email";
 
 const router = Router();
 router.use(requireAuth);
@@ -29,30 +29,74 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * Diagnóstico manual: dispara os 4 templates de e-mail (boas-vindas,
- * lembrete 30 dias, lembrete de vencimento, cancelamento) com dados
- * fictícios pro endereço informado, pra confirmar que GMAIL_USER/
- * GMAIL_APP_PASSWORD estão configurados e o envio está funcionando.
+ * Diagnóstico manual: dispara os 4 templates de e-mail (contrato
+ * finalizado com PDF anexado de verdade, lembrete 30 dias, lembrete de
+ * vencimento, cancelamento) com dados fictícios pro endereço informado,
+ * pra confirmar que GMAIL_USER/GMAIL_APP_PASSWORD estão configurados e o
+ * envio está funcionando de ponta a ponta (SMTP, anexo, texto+HTML).
  * Protegido por login (requireAuth já aplicado no router).
  */
 router.get("/admin/testar-emails", async (req, res) => {
   const to = String(req.query.to || "").trim();
   if (!to) return res.status(400).send("Use /admin/testar-emails?to=seu@email.com");
 
-  const dados = {
-    clienteNome: "Contato de Teste",
-    clienteEmail: to,
+  const contractId = "teste00000000000000000";
+  const now = new Date();
+  const umAno = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const pdfUrl = `${process.env.BASE_URL || `${req.protocol}://${req.get("host")}`}/contrato/teste/pdf`;
+
+  const pdfBytes = await renderContractPdf({
+    contractId,
+    token: "teste",
     tipoContrato: "Proteção Veicular",
-    placa: "TST1A23",
-    pdfUrl: `${process.env.BASE_URL || `${req.protocol}://${req.get("host")}`}/contrato/teste/pdf`,
-  };
+    valorFipe: 45000,
+    status: "ATIVO",
+    createdAt: now,
+    vigencia: { startDate: now, endDate: umAno },
+  });
+  const pdfPath = await savePdfToBlob(`teste-diagnostico-email.pdf`, pdfBytes);
 
-  await sendBoasVindasEmail({ ...dados, endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
-  await sendLembrete30Email({ ...dados, endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
-  await sendVencimentoEmail({ ...dados, endDate: new Date() });
-  await sendCancelamentoEmail(dados);
+  const resultados = await Promise.all([
+    sendContratoFinalizadoEmail({
+      contractId,
+      clienteNome: "Contato de Teste",
+      clienteEmail: to,
+      tipoContrato: "Proteção Veicular",
+      veiculo: "Jeep Compass 2023",
+      placa: "TST1A23",
+      startDate: now,
+      endDate: umAno,
+      pdfPath,
+    }),
+    sendLembrete30Email({
+      contractId,
+      clienteNome: "Contato de Teste",
+      clienteEmail: to,
+      tipoContrato: "Proteção Veicular",
+      placa: "TST1A23",
+      endDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+      pdfUrl,
+    }),
+    sendVencimentoEmail({
+      contractId,
+      clienteNome: "Contato de Teste",
+      clienteEmail: to,
+      tipoContrato: "Proteção Veicular",
+      placa: "TST1A23",
+      endDate: now,
+      pdfUrl,
+    }),
+    sendCancelamentoEmail({
+      contractId,
+      clienteNome: "Contato de Teste",
+      clienteEmail: to,
+      tipoContrato: "Proteção Veicular",
+      placa: "TST1A23",
+    }),
+  ]);
 
-  res.send(`4 e-mails de teste disparados para ${to}. Confira o console de logs (Vercel → Runtime Logs) se algum não chegar.`);
+  const resumo = resultados.map((r, i) => `${["Finalizado", "Lembrete 30d", "Vencimento", "Cancelamento"][i]}: ${r.ok ? "enviado" : "erro — " + r.error}`);
+  res.type("text/plain").send(`4 e-mails de teste disparados para ${to}:\n\n${resumo.join("\n")}`);
 });
 
 /**
@@ -228,7 +272,14 @@ router.get("/contratos/:id/pdf", async (req, res) => {
 router.get("/contratos/:id", async (req, res) => {
   const contract = await prisma.contract.findUnique({
     where: { id: req.params.id },
-    include: { client: true, vehicle: true, acceptance: true, approvedBy: true, createdBy: true },
+    include: {
+      client: true,
+      vehicle: true,
+      acceptance: true,
+      approvedBy: true,
+      createdBy: true,
+      emailLogs: { orderBy: { createdAt: "desc" } },
+    },
   });
   if (!contract) return res.status(404).render("404", { title: "Não encontrado" });
 
@@ -236,6 +287,7 @@ router.get("/contratos/:id", async (req, res) => {
     title: "Contrato",
     contract,
     prestesAVencer: estaPrestesAVencer(contract.endDate, contract.status),
+    emailStatus: typeof req.query.email === "string" ? req.query.email : null,
   });
 });
 
@@ -278,20 +330,50 @@ router.post("/contratos/:id/aprovar", async (req, res) => {
     },
   });
 
+  let emailStatus = "sememail";
   if (contract.client?.email) {
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
-    await sendBoasVindasEmail({
+    const resultado = await sendContratoFinalizadoEmail({
+      contractId: contract.id,
       clienteNome: contract.client.nomeCompleto,
       clienteEmail: contract.client.email,
       tipoContrato: contract.tipoContrato,
+      veiculo: `${contract.vehicle?.marca || ""} ${contract.vehicle?.modelo || ""} ${contract.vehicle?.ano || ""}`.trim(),
       placa: contract.vehicle?.placa,
+      startDate,
       endDate,
-      pdfUrl: `${baseUrl}/contrato/${contract.token}/pdf`,
+      pdfPath,
     });
+    emailStatus = resultado.ok ? "enviado" : "erro";
     await prisma.contract.update({ where: { id: contract.id }, data: { boasVindasEmailSentAt: new Date() } });
   }
 
-  res.redirect(`/contratos/${contract.id}`);
+  res.redirect(`/contratos/${contract.id}?email=${emailStatus}`);
+});
+
+router.post("/contratos/:id/reenviar", async (req, res) => {
+  const contract = await prisma.contract.findUnique({
+    where: { id: req.params.id },
+    include: { client: true, vehicle: true },
+  });
+  if (!contract) return res.status(404).render("404", { title: "Não encontrado" });
+  if (!contract.client?.email || !contract.pdfPath) {
+    return res.redirect(`/contratos/${contract.id}?email=sememail`);
+  }
+
+  const resultado = await sendContratoFinalizadoEmail({
+    contractId: contract.id,
+    clienteNome: contract.client.nomeCompleto,
+    clienteEmail: contract.client.email,
+    tipoContrato: contract.tipoContrato,
+    veiculo: `${contract.vehicle?.marca || ""} ${contract.vehicle?.modelo || ""} ${contract.vehicle?.ano || ""}`.trim(),
+    placa: contract.vehicle?.placa,
+    startDate: contract.startDate,
+    endDate: contract.endDate,
+    pdfPath: contract.pdfPath,
+    reenvio: true,
+  });
+
+  res.redirect(`/contratos/${contract.id}?email=${resultado.ok ? "enviado" : "erro"}`);
 });
 
 router.post("/contratos/:id/cancelar", async (req, res) => {
@@ -311,6 +393,7 @@ router.post("/contratos/:id/cancelar", async (req, res) => {
 
   if (contract.client?.email) {
     await sendCancelamentoEmail({
+      contractId: contract.id,
       clienteNome: contract.client.nomeCompleto,
       clienteEmail: contract.client.email,
       tipoContrato: contract.tipoContrato,
