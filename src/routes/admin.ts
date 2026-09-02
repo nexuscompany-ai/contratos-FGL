@@ -5,7 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { sweepContratosVencidos, estaPrestesAVencer, diasParaVencer, DIAS_VIGENCIA } from "../services/contractLifecycle";
-import { sendBoasVindasEmail, sendCancelamentoEmail } from "../services/email";
+import { sendBoasVindasEmail, sendCancelamentoEmail, sendLembrete30Email, sendVencimentoEmail } from "../services/email";
 
 const router = Router();
 router.use(requireAuth);
@@ -26,6 +26,33 @@ router.get("/", async (req, res) => {
     title: "Dashboard",
     stats: { ativos, pendentes, prestesAVencer, vencidos },
   });
+});
+
+/**
+ * Diagnóstico manual: dispara os 4 templates de e-mail (boas-vindas,
+ * lembrete 30 dias, lembrete de vencimento, cancelamento) com dados
+ * fictícios pro endereço informado, pra confirmar que GMAIL_USER/
+ * GMAIL_APP_PASSWORD estão configurados e o envio está funcionando.
+ * Protegido por login (requireAuth já aplicado no router).
+ */
+router.get("/admin/testar-emails", async (req, res) => {
+  const to = String(req.query.to || "").trim();
+  if (!to) return res.status(400).send("Use /admin/testar-emails?to=seu@email.com");
+
+  const dados = {
+    clienteNome: "Contato de Teste",
+    clienteEmail: to,
+    tipoContrato: "Proteção Veicular",
+    placa: "TST1A23",
+    pdfUrl: `${process.env.BASE_URL || `${req.protocol}://${req.get("host")}`}/contrato/teste/pdf`,
+  };
+
+  await sendBoasVindasEmail({ ...dados, endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
+  await sendLembrete30Email({ ...dados, endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+  await sendVencimentoEmail({ ...dados, endDate: new Date() });
+  await sendCancelamentoEmail(dados);
+
+  res.send(`4 e-mails de teste disparados para ${to}. Confira o console de logs (Vercel → Runtime Logs) se algum não chegar.`);
 });
 
 router.get("/contratos/novo", (req, res) => {
