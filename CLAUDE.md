@@ -43,6 +43,18 @@ relevante está nela, não na `main`).
   sessão a cada cold start, forçando login repetido e fazendo qualquer
   link protegido parecer "quebrado" (na real cai no /login). `maxAge` de
   30 dias. Ver `src/server.ts`.
+- **E-mails automáticos**: `src/services/email.ts` (Gmail via nodemailer,
+  conta `fglcontratos@gmail.com` com senha de app — variáveis `GMAIL_USER`/
+  `GMAIL_APP_PASSWORD` na Vercel; sem elas, só loga no console em vez de
+  enviar). Três disparos: boas-vindas ao aprovar (pede pra guardar o PDF),
+  lembrete 30 dias antes do vencimento, lembrete no dia do vencimento —
+  os dois últimos sempre puxando pra renovação. Cada um só sai uma vez por
+  contrato (`boasVindasEmailSentAt`/`lembrete30EmailSentAt`/
+  `vencimentoEmailSentAt` no Contract). Sem cron real de verdade além do
+  `vercel.json` → `GET /api/cron/lembretes` 1x/dia (protegido por
+  `CRON_SECRET`, opcional mas recomendado) — `sweepContratosVencidos()`
+  também roda "de carona" toda vez que alguém abre uma lista de contratos
+  no painel, então na prática os lembretes saem mesmo se o cron falhar.
 - **Regra de UX fixa**: todo botão "← Voltar" fica no TOPO da página,
   nunca no rodapé (`.back-link` no `style.css`).
 - **Endereço do cliente**: removido de propósito do formulário/PDF/telas

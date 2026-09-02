@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { sweepContratosVencidos, estaPrestesAVencer, diasParaVencer, DIAS_VIGENCIA } from "../services/contractLifecycle";
+import { sendBoasVindasEmail } from "../services/email";
 
 const router = Router();
 router.use(requireAuth);
@@ -223,8 +224,18 @@ router.post("/contratos/:id/aprovar", async (req, res) => {
     },
   });
 
-  // Envio de e-mail ao cliente fica pendente de configuração de SMTP; registrado no log por ora.
-  console.log(`[email] Contrato ${contract.id} aprovado — enviar PDF final para ${contract.client?.email}`);
+  if (contract.client?.email) {
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
+    await sendBoasVindasEmail({
+      clienteNome: contract.client.nomeCompleto,
+      clienteEmail: contract.client.email,
+      tipoContrato: contract.tipoContrato,
+      placa: contract.vehicle?.placa,
+      endDate,
+      pdfUrl: `${baseUrl}/contrato/${contract.token}/pdf`,
+    });
+    await prisma.contract.update({ where: { id: contract.id }, data: { boasVindasEmailSentAt: new Date() } });
+  }
 
   res.redirect(`/contratos/${contract.id}`);
 });

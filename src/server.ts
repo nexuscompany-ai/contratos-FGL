@@ -11,6 +11,7 @@ import adminRoutes from "./routes/admin";
 import publicRoutes from "./routes/public";
 import { ensureDatabaseReady } from "./db-bootstrap";
 import { formatCpf } from "./utils/format";
+import { sweepContratosVencidos } from "./services/contractLifecycle";
 
 const app = express();
 
@@ -37,6 +38,23 @@ app.use(
 app.use((req, res, next) => {
   res.locals.userName = req.session?.userName;
   next();
+});
+
+/**
+ * Disparado uma vez por dia pelo cron da Vercel (vercel.json) — garante que
+ * os lembretes de vencimento saiam mesmo se ninguém abrir o painel naquele
+ * dia. Protegido por CRON_SECRET: a Vercel envia esse valor automaticamente
+ * como "Authorization: Bearer <CRON_SECRET>" quando a variável existe. Sem
+ * CRON_SECRET configurada, roda sem checar (ainda funciona, só não é
+ * exclusivo do cron) — configure a variável no painel da Vercel.
+ */
+app.get("/api/cron/lembretes", async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).send("unauthorized");
+  }
+  await sweepContratosVencidos();
+  res.status(200).send("ok");
 });
 
 app.use("/", publicRoutes);
