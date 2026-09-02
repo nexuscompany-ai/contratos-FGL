@@ -44,8 +44,12 @@
    * Configurações desenhar exatamente um dos 5 estados pedidos.
    */
   async function getEstado() {
-    if (!pushSuportado()) return "incompativel";
+    // No iPhone, o Safari em aba normal (fora da Tela de Início) não expõe
+    // PushManager de propósito — isso faria pushSuportado() acusar
+    // "incompatível" mesmo em um iPhone perfeitamente compatível. Por isso
+    // o caso do iOS é checado ANTES do teste genérico de suporte.
     if (precisaInstalarNoIphone()) return "precisa-instalar-ios";
+    if (!pushSuportado()) return "incompativel";
     if (Notification.permission === "denied") return "bloqueado";
     if (Notification.permission !== "granted") return "nao-configurado";
 
@@ -55,8 +59,8 @@
   }
 
   async function ativar() {
-    if (!pushSuportado()) throw new Error("incompativel");
     if (precisaInstalarNoIphone()) throw new Error("precisa-instalar-ios");
+    if (!pushSuportado()) throw new Error("incompativel");
 
     const permission = await Notification.requestPermission();
     if (permission !== "granted") throw new Error("permissao-negada");
