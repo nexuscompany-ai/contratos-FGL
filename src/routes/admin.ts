@@ -5,7 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
 import { sweepContratosVencidos, estaPrestesAVencer, diasParaVencer, DIAS_VIGENCIA } from "../services/contractLifecycle";
-import { sendBoasVindasEmail } from "../services/email";
+import { sendBoasVindasEmail, sendCancelamentoEmail } from "../services/email";
 
 const router = Router();
 router.use(requireAuth);
@@ -241,7 +241,10 @@ router.post("/contratos/:id/aprovar", async (req, res) => {
 });
 
 router.post("/contratos/:id/cancelar", async (req, res) => {
-  const contract = await prisma.contract.findUnique({ where: { id: req.params.id } });
+  const contract = await prisma.contract.findUnique({
+    where: { id: req.params.id },
+    include: { client: true, vehicle: true },
+  });
   if (!contract) return res.status(404).render("404", { title: "Não encontrado" });
   if (!["GERADO", "PENDENTE", "ATIVO"].includes(contract.status)) {
     return res.redirect(`/contratos/${contract.id}`);
@@ -251,6 +254,15 @@ router.post("/contratos/:id/cancelar", async (req, res) => {
     where: { id: contract.id },
     data: { status: "CANCELADO", cancelledAt: new Date() },
   });
+
+  if (contract.client?.email) {
+    await sendCancelamentoEmail({
+      clienteNome: contract.client.nomeCompleto,
+      clienteEmail: contract.client.email,
+      tipoContrato: contract.tipoContrato,
+      placa: contract.vehicle?.placa,
+    });
+  }
 
   res.redirect(`/contratos/${contract.id}`);
 });

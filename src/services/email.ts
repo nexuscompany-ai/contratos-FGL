@@ -29,8 +29,20 @@ function layout(title: string, bodyHtml: string): string {
         <h1 style="font-size:18px; color:#171717; margin:0 0 16px;">${title}</h1>
         ${bodyHtml}
       </div>
-      <div style="padding:16px 28px; border-top:1px solid #e7e5e2; color:#737373; font-size:12px;">
-        FGL Serviço de Vigilância Patrimonial e Terceirização Ltda · Este é um e-mail automático, não é necessário respondê-lo.
+      <div style="padding:18px 28px; border-top:1px solid #e7e5e2;">
+        <table role="presentation" style="font-size:12.5px; color:#737373; border-collapse:collapse;">
+          <tr>
+            <td style="padding:2px 8px 2px 0; font-weight:bold; color:#171717;">Atendimento</td>
+            <td style="padding:2px 0;">(11) 97100-0304</td>
+          </tr>
+          <tr>
+            <td style="padding:2px 8px 2px 0; font-weight:bold; color:#171717;">Instagram</td>
+            <td style="padding:2px 0;">@fglbrasil</td>
+          </tr>
+        </table>
+        <p style="font-size:11px; color:#a3a3a3; margin:12px 0 0;">
+          FGL Serviço de Vigilância Patrimonial e Terceirização Ltda · Este é um e-mail automático, não é necessário respondê-lo.
+        </p>
       </div>
     </div>
   </div>`;
@@ -69,6 +81,13 @@ export interface ContractEmailData {
   placa?: string | null;
   endDate: Date;
   pdfUrl: string;
+}
+
+export interface CancelamentoEmailData {
+  clienteNome: string;
+  clienteEmail: string;
+  tipoContrato: string;
+  placa?: string | null;
 }
 
 function formatDate(d: Date): string {
@@ -131,6 +150,25 @@ export async function sendVencimentoEmail(data: ContractEmailData) {
       ) +
       ctaButton("Ver contrato em PDF", data.pdfUrl) +
       paragraph("Agradecemos por confiar na FGL e esperamos continuar protegendo seu veículo.")
+  );
+  await send(data.clienteEmail, subject, html);
+}
+
+/** Enviado quando o contrato é cancelado — só texto, sem link do contrato. */
+export async function sendCancelamentoEmail(data: CancelamentoEmailData) {
+  const subject = "Seu contrato foi cancelado";
+  const html = layout(
+    "Contrato cancelado",
+    paragraph(`Olá, ${data.clienteNome}.`) +
+      paragraph(
+        `Informamos que o seu contrato de <strong>${data.tipoContrato}</strong>${
+          data.placa ? ` referente ao veículo de placa <strong>${data.placa}</strong>` : ""
+        } foi cancelado e o serviço de rastreamento não está mais ativo.`
+      ) +
+      paragraph(
+        "Se o cancelamento não foi solicitado por você ou tiver qualquer dúvida, entre em contato com a nossa equipe pelos canais abaixo."
+      ) +
+      paragraph("Agradecemos por ter contado com a FGL.")
   );
   await send(data.clienteEmail, subject, html);
 }
