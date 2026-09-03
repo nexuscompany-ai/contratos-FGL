@@ -4,6 +4,7 @@ dotenv.config();
 
 import express from "express";
 import cookieSession from "cookie-session";
+import helmet from "helmet";
 import path from "path";
 
 import authRoutes from "./routes/auth";
@@ -15,13 +16,56 @@ import { formatCpf } from "./utils/format";
 import { sweepContratosVencidos } from "./services/contractLifecycle";
 
 const app = express();
+const emProducao = Boolean(process.env.VERCEL);
+
+// A Vercel entrega a requisição através de um proxy — sem isso, req.ip e
+// req.protocol (usados pelo rate limit e pelos cookies "secure") enxergam
+// o proxy em vez do cliente/protocolo reais.
+app.set("trust proxy", 1);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(process.cwd(), "src", "views"));
 app.locals.formatCpf = formatCpf;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+/**
+ * Cabeçalhos de segurança padrão (helmet). CSP customizado porque o app usa
+ * <script>/style inline nas views (não é um bug a corrigir agora — reescrever
+ * tudo pra nonce seria um refactor grande e arriscado) — então script-src e
+ * style-src precisam de 'unsafe-inline'. Mesmo assim, o resto da política já
+ * fecha as portas mais perigosas: nenhum recurso de fora do site, sem
+ * embutir o site em iframe de terceiro (clickjacking), sem <object>/<embed>,
+ * sem trocar a <base> da página.
+ */
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        manifestSrc: ["'self'"],
+        workerSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+        upgradeInsecureRequests: null,
+      },
+    },
+    crossOriginEmbedderPolicy: false, // quebraria o carregamento do Google Fonts sem ganho real de segurança aqui
+    hsts: emProducao ? undefined : false, // só força HTTPS em produção; nunca em dev local
+  })
+);
+app.use((req, res, next) => {
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  next();
+});
+
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(express.static(path.join(process.cwd(), "src", "public")));
 
 const dbReady = ensureDatabaseReady();
@@ -34,6 +78,9 @@ app.use(
     name: "session",
     keys: [process.env.SESSION_SECRET || "dev-secret"],
     maxAge: 1000 * 60 * 60 * 24 * 30,
+    httpOnly: true,
+    sameSite: "lax", // já neutraliza CSRF em POST/fetch vindo de outro site — cookie "lax" nunca acompanha essas requisições
+    secure: emProducao,
   })
 );
 
@@ -69,8 +116,12 @@ app.use((req, res) => {
 });
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // O detalhe do erro (mensagem, stack, o que for) só vai pro log do
+  // servidor — nunca pra resposta. Antes disso vazava err.message direto
+  // pro cliente, o que pode expor detalhe interno (nome de tabela, biblioteca
+  // usada, caminho de arquivo) útil pra quem estiver tentando atacar o site.
   console.error(err);
-  res.status(500).send(`Erro interno: ${err.message}`);
+  res.status(500).send("Erro interno. Tente novamente em instantes.");
 });
 
 if (!process.env.VERCEL) {

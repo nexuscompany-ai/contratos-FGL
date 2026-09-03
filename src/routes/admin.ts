@@ -102,17 +102,30 @@ router.get("/admin/testar-emails", async (req, res) => {
 /**
  * Apaga clientes, veículos e contratos de teste (aceites junto, por causa
  * da constraint) pra começar com dados reais. Usuários (logins) não são
- * tocados. Ação única e destrutiva — exige ?confirmar=SIM pra rodar, e é
- * feita sob login (requireAuth já aplicado no router).
+ * tocados. Ação única e destrutiva — por isso a exclusão de fato só roda
+ * em POST (nunca em GET): um GET que apaga dados pode ser disparado por
+ * um simples link ou <img> em outra página enquanto a pessoa está logada
+ * (CSRF), então o GET aqui só mostra a página de confirmação, sem tocar
+ * em nada. Feita sob login (requireAuth já aplicado no router).
  */
-router.get("/admin/resetar-dados-teste", async (req, res) => {
-  if (req.query.confirmar !== "SIM") {
-    return res
-      .status(400)
-      .send(
-        "Isso apaga TODOS os clientes, veículos, contratos e aceites do banco (não mexe nos logins). " +
-          "Se tem certeza, acesse /admin/resetar-dados-teste?confirmar=SIM"
-      );
+router.get("/admin/resetar-dados-teste", (req, res) => {
+  res.send(
+    `<!doctype html><html lang="pt-br"><head><meta charset="utf-8" />` +
+      `<title>Apagar dados de teste · FGL Contratos</title>` +
+      `<link rel="stylesheet" href="/css/style.css" /></head><body>` +
+      `<div class="container narrow"><div class="card">` +
+      `<h1>Apagar dados de teste</h1>` +
+      `<p>Isso apaga TODOS os clientes, veículos, contratos e aceites do banco. Os logins da equipe não são alterados. Essa ação não pode ser desfeita.</p>` +
+      `<form method="post" action="/admin/resetar-dados-teste">` +
+      `<input type="hidden" name="confirmar" value="SIM" />` +
+      `<div class="actions"><button class="btn danger" type="submit">Apagar todos os dados de teste</button></div>` +
+      `</form></div></div></body></html>`
+  );
+});
+
+router.post("/admin/resetar-dados-teste", async (req, res) => {
+  if (req.body.confirmar !== "SIM") {
+    return res.status(400).send("Confirmação ausente.");
   }
 
   const aceites = await prisma.acceptance.deleteMany({});

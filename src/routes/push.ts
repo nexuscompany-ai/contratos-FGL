@@ -1,10 +1,19 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { getVapidPublicKey, labelFromUserAgent, pushConfigurado, sendPushToUser } from "../services/push";
 
 const router = Router();
 router.use(requireAuth);
+
+const testeLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Muitos testes seguidos. Aguarde um pouco.",
+});
 
 router.get("/api/push/public-key", (req, res) => {
   res.json({ publicKey: getVapidPublicKey(), configurado: pushConfigurado });
@@ -59,7 +68,7 @@ router.post("/api/push/unsubscribe", async (req, res) => {
   res.json({ ok: true });
 });
 
-router.post("/api/push/test", async (req, res) => {
+router.post("/api/push/test", testeLimiter, async (req, res) => {
   if (!pushConfigurado) {
     return res.status(503).json({ ok: false, erro: "Notificações push não configuradas no servidor." });
   }

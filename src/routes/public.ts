@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../db";
 import { renderContractPdf, sendPdfResponse } from "../services/pdf";
 import { savePdfToBlob } from "../services/blob";
@@ -7,6 +8,21 @@ import { isValidCpf } from "../utils/format";
 import { notifyNovoContratoPendente } from "../services/notifications";
 
 const router = Router();
+
+/**
+ * O link do contrato é público (sem login, por design) — esse limite não é
+ * pra travar o cliente legítimo (nunca vai chegar perto disso preenchendo
+ * um formulário), é pra frear alguém tentando adivinhar tokens de outros
+ * contratos ou automatizar envios repetidos.
+ */
+const contratoPublicoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Muitas requisições. Aguarde alguns minutos e tente de novo.",
+});
+router.use("/contrato/:token", contratoPublicoLimiter);
 
 router.get("/contrato/:token", async (req, res) => {
   const contract = await prisma.contract.findUnique({
